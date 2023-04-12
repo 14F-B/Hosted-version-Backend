@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+   <%- include('../components/head')  %> 
+   <title><%- title %></title>
+</head>
+<body>
+    <header>
+        <%- include('../components/navigationbar')  %>
+    </header>
+    <% if (isAdmin=="admin") { %> 
+    <main id="main">
+        <section class="sub-page-strip">
+          <div class="container">
+    
+            <div class="d-flex justify-content-between align-items-center">
+              <h2>Adminisztráció</h2>
+              <%- include('../components/admin_menu')  %>
+
+
+              <ol>
+                <li><a href="/">Home</a></li>
+                <li>Adminisztrációs felület</li>
+  
+              </ol>
+            </div>
+    
+          </div>
+        </section>
+          <%- include('../components/admin_tables')  %>  
+        </main>
+        <% } %> 
+
+        <% if (isAdmin=="user") { %><div><%- include('../components/access_denied')  %></div><% } %>
+    <footer>
+        <%- include('../components/footer')  %>
+    </footer>
+    <script src="/public/js/main.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/xlsx@0.15.1/dist/xlsx.full.min.js"></script>
+</body>
+</html>
