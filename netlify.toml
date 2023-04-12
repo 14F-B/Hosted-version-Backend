@@ -8,7 +8,7 @@ to = "/"
 
 [[redirects]]
   from = "/allevents"
-  to = "/k"
+  to = "/result"
 
 [[redirects]]
   from = "/allusers"
