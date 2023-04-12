@@ -32,11 +32,13 @@ app
   .use(methodOverride("_method"))
   .use(cookieParser())
   .use("/docs", routes)
-  .get("/",(req, res) => {res.send("GO EVENT! - Backend server")});
+  .get("/",(req, res) => {res.sendFile(__dirname + '/index.html')})
+  .get("/docs",(req, res) => {res.sendFile(__dirname + '/index.html')})
+
 
 
 // HELYI HÁLÓZAT
 app.listen(port, () => {
-  console.log('\u001b[' + 32 + 'm' + 'Backend:  ' + '\u001b[0m'+`http://localhost:${port}`)
+  console.log('\u001b[' + 32 + 'm' + 'GO EVENT! Backend server:  ' + '\u001b[0m'+`http://localhost:${port}`)
 
 });
