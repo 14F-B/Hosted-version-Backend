@@ -4,7 +4,7 @@ const connection = require("../Config/database");
 
 function NextEventContent(callback) {
   connection.query(
-    "SELECT name, date FROM eventproperties WHERE CONCAT(date, ' ', time) >= NOW() ORDER BY date ASC, time ASC LIMIT 1",
+    "SELECT * FROM eventproperties WHERE date > NOW()ORDER BY date ASC LIMIT 1",
     function (error, results) {
       if (error) {
         return callback(error);

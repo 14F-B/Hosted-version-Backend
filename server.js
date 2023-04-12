@@ -9,7 +9,6 @@ const flash = require("express-flash");
 const session = require("express-session");
 const methodOverride = require("method-override");
 const port = 5172;
-const initializePassport = require("./Controllers/passportController");
 const routes = require("./routes");
 const cookieParser = require('cookie-parser');
 const cors = require("cors")
@@ -17,8 +16,6 @@ const cors = require("cors")
 
 // Függőségek
 app
-  .use("/public", express.static(__dirname + "/public"))
-  .set("view engine", "ejs")
   .use(express.json())
   .use(express.urlencoded({ extended: false }))
   .use(cors())
@@ -34,15 +31,8 @@ app
   .use(passport.session())
   .use(methodOverride("_method"))
   .use(cookieParser())
-  .use("/", routes)
-
-
-// Login  &  Sign up
-initializePassport(
-  passport,
-  (email) => users.find((user) => user.email === email),
-  (id) => users.find((user) => user.id === id)
-);
+  .use("/docs", routes)
+  .get("/",(req, res) => {res.send("GO EVENT! - Backend server")});
 
 
 // HELYI HÁLÓZAT
