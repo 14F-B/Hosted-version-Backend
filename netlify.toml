@@ -17,7 +17,7 @@ to = "/"
 
 [[redirects]]
   from = "/allusers"
-  to = "/"
+  to = "https://goeventapiservice.netlify.app/docs/allusers"
 
 [[redirects]]
   from = "/accessdenied"
