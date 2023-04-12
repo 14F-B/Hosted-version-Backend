@@ -9,7 +9,7 @@ to = "/"
 
 [[redirects]]
   from = "/docs/nextevent"
-  to = "/"
+  to = "/docs/nextevent"
 
 [[redirects]]
   from = "/allevents"
