@@ -1,9 +1,4 @@
 [[redirects]]
-  from = "/*"
-  to = "/"
-  status = 200
-  
-[[redirects]]
 from = "/docs"
 to = "/"
 
@@ -17,7 +12,7 @@ to = "/"
 
 [[redirects]]
   from = "/allusers"
-  to = "https://goeventapiservice.netlify.app/docs/allusers"
+  to = "/"
 
 [[redirects]]
   from = "/accessdenied"
