@@ -1,0 +1,26 @@
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  
+[[redirects]]
+from = "/docs"
+to = "/"
+
+[[redirects]]
+  from = "/docs/nextevent"
+  to = "/"
+
+[[redirects]]
+  from = "/allevents"
+  to = "/"
+
+[[redirects]]
+  from = "/allusers"
+  to = "/"
+
+
+[[redirects]]
+  from = "/accessdenied"
+  to = "/"
+
