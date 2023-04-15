@@ -12,6 +12,8 @@ const port = 5172;
 const routes = require("./routes");
 const cookieParser = require('cookie-parser');
 const cors = require("cors")
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
 
 
 // Függőségek
@@ -32,6 +34,7 @@ app
   .use(methodOverride("_method"))
   .use(cookieParser())
   .use("/docs", routes)
+  .use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
   .get("/",(req, res) => {res.sendFile(__dirname + '/index.html')})
   .get("/docs",(req, res) => {res.sendFile(__dirname + '/index.html')})
 

@@ -4,7 +4,7 @@ const connection = require("../Config/database");
 
 function NextEventContent(callback) {
   connection.query(
-    "SELECT * FROM eventproperties WHERE date > NOW()ORDER BY date ASC LIMIT 1",
+    "SELECT name, date,city, street,house_number FROM eventproperties INNER JOIN locations ON eventproperties.loc_id = locations.id  WHERE date > NOW() ORDER BY date ASC LIMIT 1;",
     function (error, results) {
       if (error) {
         return callback(error);

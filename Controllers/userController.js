@@ -86,13 +86,6 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
                     minute: "2-digit",
                   }).format(date);
       
-                  // QR kód generálása, az egyszerűbb ellenőrzés céljából
-                  QRCode.toFile(__dirname +`/qrcodes/${Pass_Code}.png`, `${Pass_Code}`, {
-                    errorCorrectionLevel: 'H'
-                  }, function(err) {
-                    if (err) throw err;
-                    // console.log('QR kód sikeresen mentve!');
-                  });
       
                   // Megerősítő email kiküldése
                   let mailTransporter = nodemailer.createTransport({
@@ -112,12 +105,7 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
                       path: './public/pictures/logo.png', 
                       cid: 'logo',
                     },
-                    {
-                      filename: 'qrcode.png',
-                      path: __dirname +`/qrcodes/${Pass_Code}.png`, 
-                      cid: 'qrcode',
-      
-                     }],
+                     ],
                      
                     html: `<img style="width:190px; height:33px;" src="cid:logo" /><br>Köszönjük, hogy regisztrált weboldalunkon az eseményre.
                     
@@ -125,9 +113,9 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
                 <h4>Adatok a foglalással kapcsolatban:</h4><br><br>
                 
                 <b>Esemény neve:</b> ${queryResults[0].name}<br>
-                <b>Helyszín:</b>  ${queryResults[0].city +", " +queryResults[0].street +" " +queryResults[0].house_number +"."}<br>
+                <b>Helyszín:</b>  ${queryResults[0].city}, ${queryResults[0].street}${queryResults[0].house_number ? ` ${queryResults[0].house_number}.` : ''}<br>
                 <b>Időpont:</b> ${formattedDate}<br><br>
-                <img src="cid:qrcode" /><br>
+
                 <b>Belépéshez szükséges kód:</b> ${Pass_Code}<br> 
                 <i>(Kérjük ne ossza meg ezt az adatot más személlyel!)</i><br><br>
       
@@ -144,8 +132,6 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
                     } else {
                       // console.log("Email elküldve!");
       
-                      // Helytakarékossági okból a generált QR kód törlése
-                      fs.unlinkSync(__dirname +`/qrcodes/${Pass_Code}.png`);
                     }
                   });
                 }
@@ -206,7 +192,7 @@ function cancelApplication(locationId, userId, eventId, email) {
                     cid: "logo",
                   },
                 ],
-                html: `<img style="width:130px; height:90px;" src="cid:logo" /><br>Ön visszamondta a(z) <b>${queryResults[0].name}</b> eseményt,<br>
+                html: `<img style="width:190px; height:33px;" src="cid:logo" /><br>Ön visszamondta a(z) <b>${queryResults[0].name}</b> eseményt,<br>
                 így töröltük részvételi igényét a rendszerünkből.<br><br>
 
 

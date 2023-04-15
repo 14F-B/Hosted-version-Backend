@@ -1,0 +1,874 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "version": "1.0.0",
+      "title": "GO EVENT!  -  API Service"
+    },
+    "paths": {
+      "/docs/allusers": {
+        "get": {
+          "summary": "Összes felhasználó",
+          "description": "Visszaadja az adatbázisban szereplő fehasználók összes adatát admin jogosultság során.",
+          "tags": [
+            "User process"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "A list of users",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Unauthorized"
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/docs/allevents": {
+        "get": {
+          "summary": "Összes esemény",
+          "description": "Az összes rögzített eseményt visszaadja az adatbázisból, ami a lekérdezés pillanatában még nem kezdődött el.",
+          "tags": [
+            "Event"
+          ],
+          "responses": {
+            "200": {
+              "description": "A list of events",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Event"
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+      "/docs/nextevent": {
+        "get": {
+          "summary": "Következő esemény",
+          "description": "Visszaadja a következő esemény fő adatait.",
+          "tags": [
+            "Event"
+          ],
+          "responses": {
+            "200": {
+              "description": "The details of the next upcoming event",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal server error"
+            }
+          }
+        }
+      },
+
+      "/docs/eventcategory/{categories}": {
+        "get": {
+          "summary": "Az események kategóriák szerinti szűrése",
+          "description": "Visszaadja az összes eseményt a megadott kategóriák alapján szűrve.",
+          "tags": [
+            "Event"
+          ],
+          "parameters": [
+            {
+              "name": "categories",
+              "in": "path",
+              "description": "Az események kategóriái vesszővel elválasztva",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Sikeres lekérdezés",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Event"
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Hiba az adatok letöltése során! (Adatbázis hiba)",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "error": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/docs/userapplied/{user_id}": {
+        "get": {
+          "tags": [
+            "User process"
+          ],
+          "summary": "Felhasználók regisztrált eseményei",
+          "description": "Visszaadja azon események fő adatait, melyre a felhasználó leadta az igényét.",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "user_id",
+              "required": true,
+              "description": "The ID of the user whose applied events to retrieve.",
+              "schema": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "A list of events the user has applied to.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Event"
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal server error occurred.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/docs/eventagelimit/{agelimit}": {
+        "get": {
+          "summary": "Az események korhatár szerinti szűrése",
+          "description": "Visszaadja az összes eseményt a megadott korhatár alapján szűrve.",
+          "tags": [
+            "Event"
+          ],
+          "parameters": [
+            {
+              "name": "agelimit",
+              "in": "path",
+              "description": "Az események korhatára",
+              "required": true,
+              "schema": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 150
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Sikeres lekérdezés",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Event"
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Hiba az adatok letöltése során! (Adatbázis hiba)",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "error": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/docs/eventpass/{pass_code}": {
+        "get": {
+          "summary": "Belépőkód ellenőrzés",
+          "description": "Visszaadja a belépőkódhoz tartozó esemény és felhasználó fontos adatait.",
+          "tags": [
+            "Event"
+          ],
+          "parameters": [
+            {
+              "name": "pass_code",
+              "in": "path",
+              "description": "Pass code of the event to be retrieved",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Event"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "error": {
+                        "type": "string",
+                        "description": "Description of the error"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/docs/sendForm": {
+        "post": {
+          "summary": "Kapcsolatfelvételi űrlap küldése",
+          "description": "Az űrlap adatainak feldolgozása és küldése a megadott e-mail címre.",
+          "tags": [
+            "User process"
+          ],
+          "requestBody": {
+            "description": "A kapcsolatfelvételi űrlap adatai",
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "senderName": {
+                      "type": "string",
+                      "description": "A feladó neve",
+                      "example": "John Doe"
+                    },
+                    "senderEmail": {
+                      "type": "string",
+                      "format": "email",
+                      "description": "A feladó e-mail címe",
+                      "example": "johndoe@example.com"
+                    },
+                    "subject": {
+                      "type": "string",
+                      "description": "Az üzenet tárgya",
+                      "example": "Kapcsolatfelvétel"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Az üzenet tartalma",
+                      "example": "Szia! ..."
+                    }
+                  },
+                  "required": ["senderName", "senderEmail", "subject", "message"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Az űrlap sikeresen elküldve."
+            },
+            "500": {
+              "description": "Hiba történt az űrlap küldése közben."
+            }
+          }
+        }
+      },
+      "/docs/login": {
+        "post": {
+          "tags": [
+            "Authentication"
+          ],
+          "summary": "Bejelentkezés",
+          "description": "Adatok küldése kiértékelésre",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "description": "User email and password",
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "type": "string",
+                      "description": "User email",
+                      "example": "johndoe@example.com"
+                    },
+                    "password": {
+                      "type": "string",
+                      "description": "User password",
+                      "example": "mypassword"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Successful login",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Invalid email or password",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string",
+                        "description": "Error message",
+                        "example": "Invalid email or password."
+                      },
+                      "email": {
+                        "type": "string",
+                        "description": "User email",
+                        "example": "johndoe@example.com"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Server error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string",
+                        "description": "Error message",
+                        "example": "An error occurred while processing your request."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      
+      "/docs/applyToLocation": {
+        "post": {
+          "tags": [
+            "Apply / Cancel application"
+          ],
+          "summary": "Jelentkezés egy eseményre",
+          "description": "Jelentkezési szándék leadása.",
+          "produces": [
+            "application/json"
+          ],
+          "consumes": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "User information",
+              "required": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "locationId": {
+                    "type": "integer",
+                    "description": "ID of the location to apply to.",
+                    "example": 123
+                  },
+                  "userId": {
+                    "type": "integer",
+                    "description": "ID of the user applying.",
+                    "example": 456
+                  },
+                  "eventId": {
+                    "type": "integer",
+                    "description": "ID of the event for which the user is applying.",
+                    "example": 789
+                  },
+                  "userBirthday": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Birthday of the user applying.",
+                    "example": "1990-01-01"
+                  },
+                  "eventDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Date of the event for which the user is applying.",
+                    "example": "2023-07-01"
+                  },
+                  "agelimit": {
+                    "type": "integer",
+                    "description": "Minimum age required to apply to the event.",
+                    "example": 18
+                  },
+                  "userEmail": {
+                    "type": "string",
+                    "description": "Email of the user applying.",
+                    "example": "johndoe@example.com"
+                  }
+                }
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful response.",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "description": "A success message."
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad request response.",
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "description": "A description of the error."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+        "/docs/cancelApplication": {
+          "post": {
+            "tags": [
+              "Apply / Cancel application"
+            ],
+            "summary": "Visszamondás",
+            "description": "Esemény részvétel lemondása.",
+            "security": [
+              {
+                "bearerAuth": []
+              }
+            ],
+            "requestBody": {
+              "description": "Location application data",
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "locationId": {
+                        "type": "integer",
+                        "description": "The ID of the location where the user has applied"
+                      },
+                      "userId": {
+                        "type": "integer",
+                        "description": "The ID of the user who has applied"
+                      },
+                      "eventId": {
+                        "type": "integer",
+                        "description": "The ID of the event the user has applied to"
+                      },
+                      "userEmail": {
+                        "type": "string",
+                        "description": "The email of the user who has applied"
+                      }
+                    },
+                    "required": [
+                      "locationId",
+                      "userId",
+                      "eventId",
+                      "userEmail"
+                    ]
+                  }
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Application cancelled successfully"
+              },
+              "401": {
+                "description": "Unauthorized"
+              },
+              "500": {
+                "description": "Internal server error"
+              }
+            }
+          }
+      },
+      "/docs/forgotpassword": {
+        "put": {
+          "tags": [
+            "Authentication"
+          ],
+          "summary": "Elfelejtett jelszó",
+          "description": "Elfelejtett jelszó esetén új jelszó igénylése.",
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "Email address of the user",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/ForgotPasswordRequest"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "schema": {
+                "$ref": "#/definitions/SuccessResponse"
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "schema": {
+                "$ref": "#/definitions/ErrorResponse"
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "schema": {
+                "$ref": "#/definitions/ErrorResponse"
+              }
+            }
+          }
+        }
+      },
+      "/docs/refreshPassword": {
+        "put": {
+          "tags": [
+            "Authentication"
+          ],
+          "summary": "Jelszóváltoztatás",
+          "description": "Felhasználó által ismert jelszó módosítása",
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "description": "User ID and old and new passwords",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/ChangePasswordRequest"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Success",
+              "schema": {
+                "$ref": "#/definitions/SuccessResponse"
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "schema": {
+                "$ref": "#/definitions/ErrorResponse"
+              }
+            },
+            "401": {
+              "description": "Unauthorized",
+              "schema": {
+                "$ref": "#/definitions/ErrorResponse"
+              }
+            },
+            "404": {
+              "description": "Not Found",
+              "schema": {
+                "$ref": "#/definitions/ErrorResponse"
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "schema": {
+                "$ref": "#/definitions/ErrorResponse"
+              }
+            }
+        }
+    }
+},
+"/docs/deleteEvent/{id}": {
+  "delete": {
+    "tags": [
+      "Event"
+    ],
+    "summary": "Esemény törlése",
+    "parameters": [
+      {
+        "in": "path",
+        "name": "id",
+        "description": "Az esemény azonosítója",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Az esemény sikeresen törölve lett az adatbázisból.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "A(z) {id} azonosítójú esemény törölve lett az adatbázisból."
+                }
+              }
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "Az esemény nem található az adatbázisban.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Nem található {id} azonosítójú esemény."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/docs/deleteUser/{id}": {
+  "delete": {
+    "tags": [
+      "User process"
+    ],
+    "summary": "Felhasználó törlése",
+    "parameters": [
+      {
+        "in": "path",
+        "name": "id",
+        "description": "A felhasználó azonosítója",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "A felhasználó sikeresen törölve lett az adatbázisból.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "A(z) {id} azonosítójú felhasználó törölve lett az adatbázisból."
+                }
+              }
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "A felhasználó nem található az adatbázisban.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Nem található {id} azonosítójú felhasználó."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    },
+    "components": {
+      "schemas": {
+        "User": {
+          "type": "object",
+          "required": [
+            "username",
+            "email"
+          ],
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "firstName": {
+              "type": "string"
+            },
+            "lastName": {
+              "type": "string"
+            }
+          }
+        },
+        "Event": {
+          "type": "object",
+          "required": [
+            "name",
+            "date"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            }
+          }
+        },
+        "ForgotPasswordRequest":{
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Email address of the user"
+            }
+          },
+          "required": ["email"]
+        },
+        "ChangePasswordRequest":{
+          "type": "object",
+          "properties": {
+            "userId": {
+              "type": "string",
+              "description": "The ID of the user to change the password for"
+            },
+            "oldPassword": {
+              "type": "string",
+              "description": "The user's current password"
+            },
+            "newPassword": {
+              "type": "string",
+              "description": "The user's new password"
+            }
+          },
+          "required": ["userId", "oldPassword", "newPassword"]
+        }
+
+      },
+
+
+
+      
+
+      "securitySchemes": {
+        "bearerAuth": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    }
+  }
+
+  
