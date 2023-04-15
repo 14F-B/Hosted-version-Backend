@@ -142,6 +142,165 @@
           }
         }
       },
+      "/docs/archive": {
+        "get": {
+          "summary": "Archívum",
+          "description": "Korábbi események listája",
+          "tags": [
+            "Event"
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful operation",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ArchivedEvent"
+                    }
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/docs/signup": {
+        "post": {
+          "tags": [
+            "Authentication"
+          ],
+          "summary": "Regisztráció",
+          "description": "Új felhasználó regisztrálása",
+          "requestBody": {
+            "description": "Regisztrációs adatok",
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRegistration"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Sikeres regisztráció"
+            },
+            "400": {
+              "description": "Érvénytelen regisztrációs adatok"
+            },
+            "500": {
+              "description": "Hiba történt a regisztráció során"
+            }
+          }
+        }
+      },
+
+      "/docs/newadmin": {
+        "post": {
+          "tags": [
+            "Admin process"
+          ],
+          "summary": "Admin regisztráció",
+          "description": "Az endpoint segítségével új adminisztrátort lehet regisztrálni az alkalmazásba.",
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRegistration"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Sikeres adminisztrátor regisztráció",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SuccessResponse"
+                  }
+                }
+              }
+            },
+            "401": {
+              "description": "Hitelesítési hiba",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Belső szerverhiba",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ErrorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/docs/newevent": {
+        "post": {
+          "tags": [
+            "Admin process"
+          ],
+          "summary": "Új esemény létrehozása",
+          "operationId": "createEvent",
+          "security": [
+            {
+              "JWT": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewEvent"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "New event has been created successfully."
+            },
+            "401": {
+              "description": "Unauthorized. Token is missing or invalid."
+            },
+            "500": {
+              "description": "Internal server error occurred."
+            }
+          }
+        }
+      },
+    
+
       "/docs/userapplied/{user_id}": {
         "get": {
           "tags": [
@@ -180,7 +339,7 @@
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/Error"
+                    "description": "Szerverhiba"
                   }
                 }
               }
@@ -594,7 +753,7 @@
               "description": "Email address of the user",
               "required": true,
               "schema": {
-                "$ref": "#/definitions/ForgotPasswordRequest"
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
               }
             }
           ],
@@ -602,19 +761,19 @@
             "200": {
               "description": "Success",
               "schema": {
-                "$ref": "#/definitions/SuccessResponse"
+                "description": "Az új jelszót megküldtük az email címére"
               }
             },
             "400": {
               "description": "Bad Request",
               "schema": {
-                "$ref": "#/definitions/ErrorResponse"
+                "description": "Hibás kérés"
               }
             },
             "500": {
               "description": "Internal Server Error",
               "schema": {
-                "$ref": "#/definitions/ErrorResponse"
+                "description": "Szerverhiba"
               }
             }
           }
@@ -634,7 +793,7 @@
               "description": "User ID and old and new passwords",
               "required": true,
               "schema": {
-                "$ref": "#/definitions/ChangePasswordRequest"
+                "$ref": "#/components/schemas/ChangePasswordRequest"
               }
             }
           ],
@@ -642,31 +801,31 @@
             "200": {
               "description": "Success",
               "schema": {
-                "$ref": "#/definitions/SuccessResponse"
+                "description": "Sikeres jelszóváltoztatás"
               }
             },
             "400": {
               "description": "Bad Request",
               "schema": {
-                "$ref": "#/definitions/ErrorResponse"
+                "description": "Hibás kérés"
               }
             },
             "401": {
               "description": "Unauthorized",
               "schema": {
-                "$ref": "#/definitions/ErrorResponse"
+                "description": "Unauthorized"
               }
             },
             "404": {
               "description": "Not Found",
               "schema": {
-                "$ref": "#/definitions/ErrorResponse"
+                "description": "Nem található"
               }
             },
             "500": {
               "description": "Internal Server Error",
               "schema": {
-                "$ref": "#/definitions/ErrorResponse"
+                "description": "Szerverhiba"
               }
             }
         }
@@ -839,27 +998,229 @@
         "ChangePasswordRequest":{
           "type": "object",
           "properties": {
-            "userId": {
-              "type": "string",
+            "id": {
+              "type": "integer",
               "description": "The ID of the user to change the password for"
             },
-            "oldPassword": {
+            "password_old": {
               "type": "string",
               "description": "The user's current password"
             },
-            "newPassword": {
+            "password_new": {
               "type": "string",
               "description": "The user's new password"
+            },
+            "password_new_match": {
+              "type": "string",
+              "description": "The user's new password secondly"
             }
           },
-          "required": ["userId", "oldPassword", "newPassword"]
+          "required": ["id", "password_old", "password_new","password_new_match"]
+        },
+        "ArchivedEvent": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "The name of the archived event."
+            },
+            "date": {
+              "type": "string",
+              "format": "date",
+              "description": "The date of the archived event."
+            },
+            "description": {
+              "type": "string",
+              "description": "The description of the archived event."
+            },
+            "location": {
+              "type": "string",
+              "description": "The location of the archived event."
+            }
+          }
+        },
+        "SuccessResponse": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string"
+            }
+          }
+        },
+        "ErrorResponse": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "code": {
+              "type": "integer"
+            }
+          }
+        },
+        "Error": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "code": {
+              "type": "integer"
+            }
+          }
+        },
+        "UserRegistration": {
+          "type": "object",
+          "required": [
+            "name",
+            "email",
+            "password",
+            "citizenship",
+            "gender",
+            "birthday"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "password": {
+              "type": "string",
+              "description": "A hashelt jelszó"
+            },
+            "citizenship": {
+              "type": "string"
+            },
+            "gender": {
+              "type": "string"
+            },
+            "birthday": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        },
+        "AdminRegistration": {
+          "type": "object",
+          "required": [
+            "name",
+            "email",
+            "password",
+            "citizenship",
+            "gender",
+            "birthday"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "password": {
+              "type": "string",
+              "description": "A hashelt jelszó"
+            },
+            "citizenship": {
+              "type": "string"
+            },
+            "gender": {
+              "type": "string"
+            },
+            "birthday": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        },
+        "NewEvent": {
+          "type": "object",
+          "properties": {
+            "eventName": {
+              "type": "string",
+              "description": "Name of the event",
+              "example": "Summer Music Festival"
+            },
+            "eventDescription": {
+              "type": "string",
+              "description": "Description of the event",
+              "example": "The Summer Music Festival is an annual event that features a wide range of musical genres, including rock, pop, and hip-hop."
+            },
+            "eventImgURL": {
+              "type": "string",
+              "description": "URL of the event image",
+              "example": "https://example.com/images/summer-music-festival.jpg"
+            },
+            "eventAge": {
+              "type": "string",
+              "description": "Age limit of the event",
+              "example": "18+"
+            },
+            "eventDay": {
+              "type": "string",
+              "description": "Date of the event",
+              "example": "2023-06-30"
+            },
+            "eventCategory": {
+              "type": "string",
+              "description": "Category of the event",
+              "example": "Music"
+            },
+            "maxLocId": {
+              "type": "integer",
+              "description": "Maximum location ID of the event",
+              "example": 3
+            },
+            "eventPerformers": {
+              "type": "array",
+              "description": "Performers of the event",
+              "items": {
+                "type": "string",
+                "example": "Ed Sheeran"
+              }
+            },
+            "eventCity": {
+              "type": "string",
+              "description": "City of the event",
+              "example": "New York"
+            },
+            "eventStreet": {
+              "type": "string",
+              "description": "Street of the event",
+              "example": "Broadway"
+            },
+            "eventHno": {
+              "type": "string",
+              "description": "House number of the event",
+              "example": "123"
+            },
+            "eventCapacity": {
+              "type": "integer",
+              "description": "Capacity of the event",
+              "example": 1000
+            }
+          },
+          "required": [
+            "eventName",
+            "eventDay",
+            "eventCategory",
+            "maxLocId",
+            "eventPerformers",
+            "eventCity",
+            "eventStreet",
+            "eventHno",
+            "eventCapacity"
+          ]
         }
-
       },
+     
+    
+    
 
-
-
-      
 
       "securitySchemes": {
         "bearerAuth": {
