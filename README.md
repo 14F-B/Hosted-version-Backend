@@ -1,6 +1,5 @@
 # Hosted version (Backend)
-[https://goeventapiservice.cyclic.app/](https://goeventapiservice.cyclic.app/)
-[Swagger documentation](https://goeventapiservice.cyclic.app/swagger/)
+[Swagger documentation - https://goeventapiservice.cyclic.app ](https://goeventapiservice.cyclic.app)
 
 
 
