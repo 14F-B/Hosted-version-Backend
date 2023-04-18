@@ -20,7 +20,7 @@ const swaggerDocument = require('./swagger.json');
 app
   .use(express.json())
   .use(express.urlencoded({ extended: false }))
-  .use(cors())
+  .use(cors({origin:'https://goeventhungary.netlify.app'}))
   .use(flash())
   .use(
     session({
@@ -34,9 +34,8 @@ app
   .use(methodOverride("_method"))
   .use(cookieParser())
   .use("/docs", routes)
-  .use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-  .get("/",(req, res) => {res.sendFile(__dirname + '/index.html')})
-  .get("/docs",(req, res) => {res.sendFile(__dirname + '/index.html')})
+  .use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+
 
 
 

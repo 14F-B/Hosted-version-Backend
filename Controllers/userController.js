@@ -5,32 +5,30 @@ var QRCode = require("qrcode");
 const fs = require("fs");
 
 // FELHASZNÁLÓ TÖRLÉSE
-function deleteUserById(id) {
-  connection.getConnection((err, connection) => {
-    if (err) {
-      console.log(err);
-      return;
-    }
-
-    const deleteUserEventsQuery = "DELETE FROM users_events WHERE users_id = ?";
-    connection.query(deleteUserEventsQuery, [id], (err, result) => {
+async function deleteUserById(id) {
+  return new Promise((resolve, reject) => {
+    connection.getConnection(async (err, connection) => {
       if (err) {
         console.log(err);
-        connection.release();
+        reject(err);
         return;
       }
-      
-      const deleteUserQuery = "DELETE FROM users WHERE id = ?";
-      connection.query(deleteUserQuery, [id], (err, result) => {
-        if (err) {
-          console.log(err);
-          connection.release();
-          return;
-        }
+
+      try {
+        const deleteUserEventsQuery = "DELETE FROM users_events WHERE users_id = ?";
+        await connection.query(deleteUserEventsQuery, [id]);
         
+        const deleteUserQuery = "DELETE FROM users WHERE id = ?";
+        await connection.query(deleteUserQuery, [id]);
+
         // console.log("Sikeres felhasználó törlés");
         connection.release();
-      });
+        resolve(true);
+      } catch (err) {
+        console.log(err);
+        connection.release();
+        reject(err);
+      }
     });
   });
 }

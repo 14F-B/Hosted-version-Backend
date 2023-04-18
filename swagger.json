@@ -1075,6 +1075,7 @@
             "name",
             "email",
             "password",
+            "password_match",
             "citizenship",
             "gender",
             "birthday"
@@ -1089,7 +1090,11 @@
             },
             "password": {
               "type": "string",
-              "description": "A hashelt jelszó"
+              "description": "Jelszó"
+            },
+            "password_match": {
+              "type": "string",
+              "description": "Jelszó mégegyszer"
             },
             "citizenship": {
               "type": "string"
@@ -1109,6 +1114,7 @@
             "name",
             "email",
             "password",
+            "password_match",
             "citizenship",
             "gender",
             "birthday"
@@ -1123,7 +1129,11 @@
             },
             "password": {
               "type": "string",
-              "description": "A hashelt jelszó"
+              "description": "Jelszó"
+            },
+            "password_match": {
+              "type": "string",
+              "description": "Jelszó mégegyszer"
             },
             "citizenship": {
               "type": "string"
@@ -1142,42 +1152,37 @@
           "properties": {
             "eventName": {
               "type": "string",
-              "description": "Name of the event",
+              "description": "Esemény neve",
               "example": "Summer Music Festival"
             },
             "eventDescription": {
               "type": "string",
-              "description": "Description of the event",
+              "description": "Esemény leírása (255 karakter)",
               "example": "The Summer Music Festival is an annual event that features a wide range of musical genres, including rock, pop, and hip-hop."
             },
             "eventImgURL": {
               "type": "string",
-              "description": "URL of the event image",
+              "description": "Eseményhez tartozó illusztrációs kép URL címe",
               "example": "https://example.com/images/summer-music-festival.jpg"
             },
             "eventAge": {
               "type": "string",
-              "description": "Age limit of the event",
+              "description": "Esemény korhatára",
               "example": "18+"
             },
             "eventDay": {
               "type": "string",
-              "description": "Date of the event",
+              "description": "Esemény dátuma",
               "example": "2023-06-30"
             },
             "eventCategory": {
               "type": "string",
-              "description": "Category of the event",
-              "example": "Music"
-            },
-            "maxLocId": {
-              "type": "integer",
-              "description": "Maximum location ID of the event",
-              "example": 3
+              "description": "Esemény kategóriája",
+              "example": "Zene (Koncert)"
             },
             "eventPerformers": {
               "type": "array",
-              "description": "Performers of the event",
+              "description": "Fellépő neve",
               "items": {
                 "type": "string",
                 "example": "Ed Sheeran"
@@ -1185,22 +1190,22 @@
             },
             "eventCity": {
               "type": "string",
-              "description": "City of the event",
-              "example": "New York"
+              "description": "Esemény helszíne - település",
+              "example": "Dunaújváros"
             },
             "eventStreet": {
               "type": "string",
-              "description": "Street of the event",
-              "example": "Broadway"
+              "description": "Esemény helyszíne - utca",
+              "example": "Kossuth utca"
             },
             "eventHno": {
               "type": "string",
-              "description": "House number of the event",
+              "description": "Esemény helyszíne - házszám",
               "example": "123"
             },
             "eventCapacity": {
               "type": "integer",
-              "description": "Capacity of the event",
+              "description": "Helyszín kapacitása",
               "example": 1000
             }
           },
@@ -1208,7 +1213,6 @@
             "eventName",
             "eventDay",
             "eventCategory",
-            "maxLocId",
             "eventPerformers",
             "eventCity",
             "eventStreet",
