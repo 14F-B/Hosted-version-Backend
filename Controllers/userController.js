@@ -7,10 +7,10 @@ const fs = require("fs");
 // FELHASZNÁLÓ TÖRLÉSE
 async function deleteUserById(id) {
   return new Promise((resolve, reject) => {
-    connection.getConnection(async (err, connection) => {
-      if (err) {
-        console.log(err);
-        reject(err);
+    connection.getConnection(async (error, connection) => {
+      if (error) {
+        console.log(error);
+        reject(error);
         return;
       }
 
@@ -24,10 +24,10 @@ async function deleteUserById(id) {
         // console.log("Sikeres felhasználó törlés");
         connection.release();
         resolve(true);
-      } catch (err) {
-        console.log(err);
+      } catch (error) {
+        console.log(error);
         connection.release();
-        reject(err);
+        reject(error);
       }
     });
   });
@@ -36,9 +36,9 @@ async function deleteUserById(id) {
 // JELENTKEZÉS EGY ESEMÉNYRE
 function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
   const checkCapacityQuery = `SELECT applied, capacity FROM locations WHERE id = ${locationId};`;
-  connection.query(checkCapacityQuery, (err, results) => {
-    if (err) {
-      console.err(err);
+  connection.query(checkCapacityQuery, (error, results) => {
+    if (error) {
+      console.error(error);
     } else {
       const applied = results[0].applied;
       const capacity = results[0].capacity;
@@ -46,9 +46,9 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
       if (applied < capacity && userAge >= eventAge) {
         // a helyszín kapacitása még nem telítődött meg, és a felhasználó megfelelő korú
         const query = `UPDATE locations SET applied = applied + 1 WHERE id = ${locationId}`;
-        connection.query(query, (err) => {
-          if (err) {
-            console.err(err);
+        connection.query(query, (error) => {
+          if (error) {
+            console.error(error);
           } else {
             // console.log(`Sikeresen jelentkezett a(z) ${locationId} helyszínre!`);
           }
@@ -64,16 +64,16 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
         // Kapcsolótábla feltöltése a megfelelő adatokkal
         connection.query(
           `INSERT INTO users_events (events_id, users_id, event_pass_code) VALUES (${eventId},${userId},${'"' + Pass_Code + '"'})`,
-          (err, results) => {
-            if (err) {
-              console.err(err);
+          (error, results) => {
+            if (error) {
+              console.error(error);
             } else {
               const alldataquery = `SELECT * FROM eventproperties 
                                     JOIN locations ON eventproperties.loc_id = locations.id 
                                     WHERE locations.id = ${locationId};`;
-              connection.query(alldataquery, (queryerr, queryResults) => {
-                if (queryerr) {
-                  console.err(queryerr);
+              connection.query(alldataquery, (queryerror, queryResults) => {
+                if (queryerror) {
+                  console.error(queryerror);
                 } else {
                   const date = new Date(queryResults[0].date);
                   const formattedDate = new Intl.DateTimeFormat("hu-HU", {
@@ -124,9 +124,9 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
                 `,
                   };
       
-                  mailTransporter.sendMail(details, (err) => {
-                    if (err) {
-                      // console.log("Hiba történt az email küldése közben!", err);
+                  mailTransporter.sendMail(details, (error) => {
+                    if (error) {
+                      // console.log("Hiba történt az email küldése közben!", error);
                     } else {
                       // console.log("Email elküldve!");
       
@@ -152,24 +152,24 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
 // ESEMÉNY VISSZAMONDÁSA
 function cancelApplication(locationId, userId, eventId, email) {
   const checkQuery = `SELECT * FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
-  connection.query(checkQuery, (checkerr, checkResults) => {
-    if (checkerr) {
-      console.err(checkerr);
+  connection.query(checkQuery, (checkerror, checkResults) => {
+    if (checkerror) {
+      console.error(checkerror);
     } else if (checkResults.length === 0) {
-      // console.err("A megadott felhasználó és esemény páros nem található az adatbázisban");
+      // console.error("A megadott felhasználó és esemény páros nem található az adatbázisban");
     } else {
       // Kapcsolótábla rekordjának törlése
       const query2 = `DELETE FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
-      connection.query(query2, (deleteerr, deleteResults) => {
-        if (deleteerr) {
-          console.err(deleteerr);
+      connection.query(query2, (deleteerror, deleteResults) => {
+        if (deleteerror) {
+          console.error(deleteerror);
         } else {
           const alldataquery = `SELECT * FROM eventproperties 
                                 JOIN locations ON eventproperties.loc_id = locations.id 
                                 WHERE locations.id = ${locationId};`;
-          connection.query(alldataquery, (queryerr, queryResults) => {
-            if (queryerr) {
-              console.err(queryerr);
+          connection.query(alldataquery, (queryerror, queryResults) => {
+            if (queryerror) {
+              console.error(queryerror);
             } else {
               // Visszamondó email kiküldése
               let mailTransporter = nodemailer.createTransport({
@@ -200,9 +200,9 @@ function cancelApplication(locationId, userId, eventId, email) {
                 Üdvözlettel: GO EVENT! Csapata
                 `,
               };
-              mailTransporter.sendMail(details, (err) => {
-                if (err) {
-                  // console.log("Hiba történt az email küldése közben!", err);
+              mailTransporter.sendMail(details, (error) => {
+                if (error) {
+                  // console.log("Hiba történt az email küldése közben!", error);
                 } else {
                   // console.log("Email elküldve!");
                 }
@@ -213,9 +213,9 @@ function cancelApplication(locationId, userId, eventId, email) {
       });
       // Aktuális létszám csökkentése
       const query = `UPDATE locations SET applied = applied - 1 WHERE id = ${locationId}`;
-      connection.query(query, (err, results) => {
-        if (err) {
-          console.err(err);
+      connection.query(query, (error, results) => {
+        if (error) {
+          console.error(error);
         } else {
           // console.log(`Sikeresen törölte jelentkezési szándékát!`);
         }
@@ -255,9 +255,9 @@ function contactForm(senderName, senderEmail, subject, message) {
                         <span style="font-weight:bold; padding:16px; color: #131647;">Kitöltés dátuma: </span>${date_format}<br>`,
   };
 
-  mailTransporter.sendMail(details, (err) => {
-    if (err) {
-      console.log("Hiba az email kiküldése során!", err);
+  mailTransporter.sendMail(details, (error) => {
+    if (error) {
+      console.log("Hiba az email kiküldése során!", error);
     } else {
       // console.log("Email elküldve!");
     }
