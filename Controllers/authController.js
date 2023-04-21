@@ -14,7 +14,7 @@ function signUp(connection) {
         const email = req.body.email;
         connection.query(`SELECT * FROM users WHERE email="${email}"`, async (err, results) => {
           if (err) {
-            console.error('Hiba a regisztráció során: ' + err.stack);
+            console.err('Hiba a regisztráció során: ' + err.stack);
             return res.redirect("/");
           }
           if (results.length > 0) {
@@ -33,7 +33,7 @@ function signUp(connection) {
             "user"
           )`, (err) => {
             if (err) {
-              console.error('Hiba a regisztráció során: ' + err.stack);
+              console.err('Hiba a regisztráció során: ' + err.stack);
               return res.redirect("/");
             }
             // console.log('Sikeresen regisztráció');
@@ -54,18 +54,18 @@ function signUp(connection) {
 
 
 function forgotPassword(email) {
-    connection.query(`SELECT * FROM users WHERE email = '${email}'`, async (error, results) => {
-      if (error) {
-        console.error(error);
+    connection.query(`SELECT * FROM users WHERE email = '${email}'`, async (err, results) => {
+      if (err) {
+        console.err(err);
       } else if (results.length === 0) {
         console.log("Az adott e-mail cím nem található az adatbázisban."); // VISSZA KELL KÜLDENI A WEBOLDALNAK!!
       } else {
         const newPassword = generateRandomPassword(); // Véletlenszerű jelszó generálása
         const newPasswordHash = await bcrypt.hash(newPassword, 10);
   
-        connection.query(`UPDATE users SET password = '${newPasswordHash}' WHERE email = '${email}'`, (error) => {
-          if (error) {
-            console.error(error);
+        connection.query(`UPDATE users SET password = '${newPasswordHash}' WHERE email = '${email}'`, (err) => {
+          if (err) {
+            console.err(err);
           } else {
             // console.log("A jelszó sikeresen módosítva lett.");
   
@@ -130,14 +130,14 @@ function changePassword(userId, oldPassword, newPassword, newPasswordMatch, call
   }
 
   // Jelenlegi jelszó ellenőrzése adatbázisból
-  connection.query('SELECT password FROM users WHERE id = ?', [userId], function (error, results) {
-    if (error) {
+  connection.query('SELECT password FROM users WHERE id = ?', [userId], function (err, results) {
+    if (err) {
       callback('Adatbázis hiba');
       return;
     }
     const storedPassword = results[0].password;
-    bcrypt.compare(oldPassword, storedPassword, function (error, result) {
-      if (error) {
+    bcrypt.compare(oldPassword, storedPassword, function (err, result) {
+      if (err) {
         callback('Hiba történt a jelszó ellenőrzésekor');
         return;
       }
@@ -148,14 +148,14 @@ function changePassword(userId, oldPassword, newPassword, newPasswordMatch, call
       }
 
       // Új jelszó aktualizálása az adatbázisban
-      bcrypt.hash(newPassword, 10, function (error, hash) {
-        if (error) {
+      bcrypt.hash(newPassword, 10, function (err, hash) {
+        if (err) {
           callback('Hiba történt a jelszó hashelésekor');
           return;
         }
 
-        connection.query('UPDATE users SET password = ? WHERE id = ?', [hash, userId], function (error, results) {
-          if (error) {
+        connection.query('UPDATE users SET password = ? WHERE id = ?', [hash, userId], function (err, results) {
+          if (err) {
             callback('Adatbázis hiba');
             return;
           }
