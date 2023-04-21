@@ -1,19 +1,5 @@
 const connection = require("../Config/database");
 
-// KÖVETKEZŐ ESEMÉNY
-
-function NextEventContent(callback) {
-  connection.query(
-    "SELECT name, date,city, street,house_number FROM eventproperties INNER JOIN locations ON eventproperties.loc_id = locations.id  WHERE date > NOW() ORDER BY date ASC LIMIT 1;",
-    function (error, results) {
-      if (error) {
-        return callback(error);
-      }
-      return callback(null, results);
-    }
-  );
-}
-
 // ÖSSZES ESEMÉNY KILISTÁZÁSA
 function AllEvents() {
   return new Promise((resolve, reject) => {
