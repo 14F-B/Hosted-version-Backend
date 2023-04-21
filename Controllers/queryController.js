@@ -5,9 +5,9 @@ const connection = require("../Config/database");
 function NextEventContent(callback) {
   connection.query(
     "SELECT name, date,city, street,house_number FROM eventproperties INNER JOIN locations ON eventproperties.loc_id = locations.id  WHERE date > NOW() ORDER BY date ASC LIMIT 1;",
-    function (err, results) {
-      if (err) {
-        return callback(err);
+    function (error, results) {
+      if (error) {
+        return callback(error);
       }
       return callback(null, results);
     }
@@ -25,9 +25,9 @@ function AllEvents() {
        JOIN events_perfomers ON eventproperties.id = events_perfomers.events_id 
        JOIN performers ON events_perfomers.performs_id = performers.id 
        WHERE eventproperties.date > NOW() ORDER BY eventproperties.date ASC;`,
-      function (err, results) {
-        if (err) {
-          reject(err);
+      function (error, results) {
+        if (error) {
+          reject(error);
         } else {
           const parsedResults = JSON.parse(JSON.stringify(results));
           resolve(parsedResults);
@@ -50,9 +50,9 @@ function eventsByCategories(category) {
       WHERE eventproperties.date > NOW() AND eventproperties.Category = ? 
       ORDER BY eventproperties.date ASC;`,
       [category],
-      function (err, results) {
-        if (err) {
-          reject(err);
+      function (error, results) {
+        if (error) {
+          reject(error);
         } else {
           const parsedResults = JSON.parse(JSON.stringify(results));
           resolve(parsedResults);
@@ -75,9 +75,9 @@ function eventsByAge(agelimit) {
       WHERE eventproperties.date > NOW() AND eventproperties.agelimit = ? 
       ORDER BY eventproperties.date ASC;`,
       [agelimit],
-      function (err, results) {
-        if (err) {
-          reject(err);
+      function (error, results) {
+        if (error) {
+          reject(error);
         } else {
           const parsedResults = JSON.parse(JSON.stringify(results));
           resolve(parsedResults);
@@ -98,9 +98,9 @@ function eventPass(pass_code) {
        JOIN users ON users_events.users_id = users.id
        WHERE users_events.event_pass_code = ?`,
       [pass_code],
-      function (err, results) {
-        if (err) {
-          reject(err);
+      function (error, results) {
+        if (error) {
+          reject(error);
         } else {
           const parsedResults = JSON.parse(JSON.stringify(results));
           resolve(parsedResults);
@@ -120,9 +120,9 @@ function ArchivedEvents() {
       FROM eventproperties JOIN locations ON eventproperties.loc_id = locations.id 
       JOIN events_perfomers ON eventproperties.id = events_perfomers.events_id 
       JOIN performers ON events_perfomers.performs_id = performers.id WHERE eventproperties.date < NOW() ORDER BY eventproperties.date ASC;`,
-      function (err, results) {
-        if (err) {
-          reject(err);
+      function (error, results) {
+        if (error) {
+          reject(error);
         } else {
           const parsedResults = JSON.parse(JSON.stringify(results));
           resolve(parsedResults);
@@ -136,9 +136,9 @@ function ArchivedEvents() {
 // ÖSSZES FELHASZNÁLÓ
 function getUsers() {
   return new Promise((resolve, reject) => {
-    connection.query("SELECT * FROM users;", function (err, results) {
-      if (err) {
-        reject(err);
+    connection.query("SELECT * FROM users;", function (error, results) {
+      if (error) {
+        reject(error);
       } else {
         resolve(results);
       }
@@ -157,9 +157,9 @@ function getAppliedEvents(id) {
                       WHERE users_events.users_id = ? AND eventproperties.date > NOW() 
                       ORDER BY eventproperties.date`,
       [parseInt(id)],
-      function (err, results) {
-        if (err) {
-          reject(err);
+      function (error, results) {
+        if (error) {
+          reject(error);
         } else {
           resolve(JSON.parse(JSON.stringify(results)));
         }
