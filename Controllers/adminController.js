@@ -20,7 +20,7 @@ function AddNewEvent(connection) {
           "SELECT MAX(id) AS maxId FROM locations",
           function (err, results) {
             if (err) {
-              console.error("Error retrieving max location id: " + err.stack);
+              console.err("err retrieving max location id: " + err.stack);
               reject(err);
             }
             var maxLocId = 1 + results[0].maxId; // az utolsó id érték
@@ -37,7 +37,7 @@ function AddNewEvent(connection) {
               ],
               function (err) {
                 if (err) {
-                  console.error("Hiba történt az adatok felvitele során [eventproperties]: " + err.stack);
+                  console.err("Hiba történt az adatok felvitele során [eventproperties]: " + err.stack);
                   reject(err);
                 }
                 // console.log("Sikeres adatfelvitel az eventproperties táblába!");
@@ -54,7 +54,7 @@ function AddNewEvent(connection) {
           [req.body.eventPerformers],
           function (err) {
             if (err) {
-              console.error("Hiba történt az adatok felvitele során [performers]: " + err.stack);
+              console.err("Hiba történt az adatok felvitele során [performers]: " + err.stack);
               reject(err);
             }
             resolve();
@@ -73,7 +73,7 @@ function AddNewEvent(connection) {
           ],
           function (err) {
             if (err) {
-              console.error("Hiba történt az adatok felvitele során [locations]: " + err.stack);
+              console.err("Hiba történt az adatok felvitele során [locations]: " + err.stack);
               reject(err);
             }
             resolve();
@@ -88,9 +88,9 @@ function AddNewEvent(connection) {
         return new Promise((resolve, reject) => {
           connection.query(
             "SELECT id FROM eventproperties ORDER BY id DESC LIMIT 1",
-            (error, results) => {
-              if (error) {
-                reject(error);
+            (err, results) => {
+              if (err) {
+                reject(err);
               } else {
                 resolve(parseInt((results[0].id)));
               }
@@ -104,9 +104,9 @@ function AddNewEvent(connection) {
         return new Promise((resolve, reject) => {
           connection.query(
             "SELECT id FROM performers ORDER BY id DESC LIMIT 1",
-            (error, results) => {
-              if (error) {
-                reject(error);
+            (err, results) => {
+              if (err) {
+                reject(err);
               } else {
                 resolve(parseInt((results[0].id)));
               }
@@ -123,17 +123,17 @@ function AddNewEvent(connection) {
           const query ="INSERT INTO events_perfomers (performs_id, events_id) VALUES (?, ?);";
 
           const values = [lastPerformerId,lastEventId, ];
-          connection.query(query, values, (error, results) => {
-            if (error) {
-              console.error(
-                "Hiba történt az adatok felvitele során [events_perfomers >< ]:" + error.stack
+          connection.query(query, values, (err, results) => {
+            if (err) {
+              console.err(
+                "Hiba történt az adatok felvitele során [events_perfomers >< ]:" + err.stack
               );
               return;
             }
             // console.log("Sikeres adatfelvitel az events_perfomers kapcsolótáblába!");
           });
-        } catch (error) {
-          console.error("Hiba az utolsó ID feltöltése során!" + error.stack);
+        } catch (err) {
+          console.err("Hiba az utolsó ID feltöltése során!" + err.stack);
         }
       };
 
@@ -158,7 +158,7 @@ function AddNewAdmin(connection, fs) {
         // Email ellenőrzése
         connection.query(`SELECT * FROM users WHERE email="${req.body.email}"`, async (err, results) => {
           if (err) {
-            console.error('Hiba a regisztráció során: ' + err.stack);
+            console.err('Hiba a regisztráció során: ' + err.stack);
             return res.redirect("/");
           }
           if (results.length > 0) {
@@ -177,7 +177,7 @@ function AddNewAdmin(connection, fs) {
             "admin"
           )`, (err) => {
             if (err) {
-              console.error('Hiba a regisztráció során: ' + err.stack);
+              console.err('Hiba a regisztráció során: ' + err.stack);
               return res.redirect("/");
             }
             // console.log('Sikeresen hozzáadta az admin-t!');
