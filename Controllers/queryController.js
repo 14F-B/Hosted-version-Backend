@@ -110,28 +110,7 @@ function eventPass(pass_code) {
   });
 }
 
-// ARCHÍVÁLT ESEMÉNYEK (KORÁBBIAK)
-function ArchivedEvents() {
-  return new Promise((resolve, reject) => {
-    connection.query(
-      `SELECT eventproperties.id, eventproperties.name, eventproperties.date,DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS formatted_date, eventproperties.agelimit, eventproperties.url_link, eventproperties.description,
-      eventproperties.loc_id, locations.city, locations.street, locations.house_number, 
-      locations.capacity, locations.applied, performers.name as performer_name 
-      FROM eventproperties JOIN locations ON eventproperties.loc_id = locations.id 
-      JOIN events_perfomers ON eventproperties.id = events_perfomers.events_id 
-      JOIN performers ON events_perfomers.performs_id = performers.id WHERE eventproperties.date < NOW() ORDER BY eventproperties.date ASC;`,
-      function (error, results) {
-        if (error) {
-          reject(error);
-        } else {
-          const parsedResults = JSON.parse(JSON.stringify(results));
-          resolve(parsedResults);
-        }
-      }
-    );
-  });
-  
-}
+
 
 // ÖSSZES FELHASZNÁLÓ
 function getUsers() {
