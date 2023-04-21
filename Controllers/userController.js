@@ -36,9 +36,9 @@ async function deleteUserById(id) {
 // JELENTKEZÉS EGY ESEMÉNYRE
 function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
   const checkCapacityQuery = `SELECT applied, capacity FROM locations WHERE id = ${locationId};`;
-  connection.query(checkCapacityQuery, (error, results) => {
-    if (error) {
-      console.error(error);
+  connection.query(checkCapacityQuery, (err, results) => {
+    if (err) {
+      console.err(err);
     } else {
       const applied = results[0].applied;
       const capacity = results[0].capacity;
@@ -46,9 +46,9 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
       if (applied < capacity && userAge >= eventAge) {
         // a helyszín kapacitása még nem telítődött meg, és a felhasználó megfelelő korú
         const query = `UPDATE locations SET applied = applied + 1 WHERE id = ${locationId}`;
-        connection.query(query, (error) => {
-          if (error) {
-            console.error(error);
+        connection.query(query, (err) => {
+          if (err) {
+            console.err(err);
           } else {
             // console.log(`Sikeresen jelentkezett a(z) ${locationId} helyszínre!`);
           }
@@ -64,16 +64,16 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
         // Kapcsolótábla feltöltése a megfelelő adatokkal
         connection.query(
           `INSERT INTO users_events (events_id, users_id, event_pass_code) VALUES (${eventId},${userId},${'"' + Pass_Code + '"'})`,
-          (error, results) => {
-            if (error) {
-              console.error(error);
+          (err, results) => {
+            if (err) {
+              console.err(err);
             } else {
               const alldataquery = `SELECT * FROM eventproperties 
                                     JOIN locations ON eventproperties.loc_id = locations.id 
                                     WHERE locations.id = ${locationId};`;
-              connection.query(alldataquery, (queryError, queryResults) => {
-                if (queryError) {
-                  console.error(queryError);
+              connection.query(alldataquery, (queryerr, queryResults) => {
+                if (queryerr) {
+                  console.err(queryerr);
                 } else {
                   const date = new Date(queryResults[0].date);
                   const formattedDate = new Intl.DateTimeFormat("hu-HU", {
@@ -152,24 +152,24 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
 // ESEMÉNY VISSZAMONDÁSA
 function cancelApplication(locationId, userId, eventId, email) {
   const checkQuery = `SELECT * FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
-  connection.query(checkQuery, (checkError, checkResults) => {
-    if (checkError) {
-      console.error(checkError);
+  connection.query(checkQuery, (checkerr, checkResults) => {
+    if (checkerr) {
+      console.err(checkerr);
     } else if (checkResults.length === 0) {
-      // console.error("A megadott felhasználó és esemény páros nem található az adatbázisban");
+      // console.err("A megadott felhasználó és esemény páros nem található az adatbázisban");
     } else {
       // Kapcsolótábla rekordjának törlése
       const query2 = `DELETE FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
-      connection.query(query2, (deleteError, deleteResults) => {
-        if (deleteError) {
-          console.error(deleteError);
+      connection.query(query2, (deleteerr, deleteResults) => {
+        if (deleteerr) {
+          console.err(deleteerr);
         } else {
           const alldataquery = `SELECT * FROM eventproperties 
                                 JOIN locations ON eventproperties.loc_id = locations.id 
                                 WHERE locations.id = ${locationId};`;
-          connection.query(alldataquery, (queryError, queryResults) => {
-            if (queryError) {
-              console.error(queryError);
+          connection.query(alldataquery, (queryerr, queryResults) => {
+            if (queryerr) {
+              console.err(queryerr);
             } else {
               // Visszamondó email kiküldése
               let mailTransporter = nodemailer.createTransport({
@@ -213,9 +213,9 @@ function cancelApplication(locationId, userId, eventId, email) {
       });
       // Aktuális létszám csökkentése
       const query = `UPDATE locations SET applied = applied - 1 WHERE id = ${locationId}`;
-      connection.query(query, (error, results) => {
-        if (error) {
-          console.error(error);
+      connection.query(query, (err, results) => {
+        if (err) {
+          console.err(err);
         } else {
           // console.log(`Sikeresen törölte jelentkezési szándékát!`);
         }
