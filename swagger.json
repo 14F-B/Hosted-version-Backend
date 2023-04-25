@@ -1,10 +1,18 @@
 {
     "openapi": "3.0.0",
     "info": {
-      "version": "1.2.5",
+      "version": "3.0.0",
       "title": "GO EVENT!  -  API Service",
-      "description": "<img alt='Database Relation model' src='https://raw.githubusercontent.com/CsizmaziaAdam/CsizmaziaAdam.github.io/main/DatabaseModell.png' >"
+      "description": "<img alt='Database Relation model' src='https://raw.githubusercontent.com/CsizmaziaAdam/CsizmaziaAdam.github.io/main/DatabaseModellVegso.png' >"
     },
+    "host": "https://goeventapiservice.cyclic.app",
+    "schemes": [
+      "https"
+    ],
+    "basePath": "/docs",
+    "produces": [
+      "application/json"
+    ],
     "paths": {
       "/docs/allusers": {
         "get": {
@@ -16,14 +24,39 @@
 
           "responses": {
             "200": {
-              "description": "A list of users",
+              "description": "Felhasználók listája",
               "content": {
                 "application/json": {
                   "schema": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/components/schemas/User"
-                    }
+                    "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
+                        },
+                        "gender": {
+                          "type": "string"
+                        },
+                        "permission": {
+                          "type": "string"
+                        },
+                        "birthdate": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "nationality": {
+                          "type": "string"
+                        }
+                      }
                   }
                 }
               }
@@ -32,7 +65,7 @@
               "description": "Unauthorized"
             },
             "500": {
-              "description": "Internal server error"
+              "description": "Szerver hiba!"
             }
           }
         }
@@ -42,24 +75,24 @@
           "summary": "Összes esemény",
           "description": "Az összes rögzített eseményt visszaadja az adatbázisból, ami a lekérdezés pillanatában még nem kezdődött el.",
           "tags": [
-            "Event"
+            "Event informations"
           ],
           "responses": {
             "200": {
-              "description": "A list of events",
+              "description": "Az események listája",
               "content": {
                 "application/json": {
                   "schema": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Event"
+                      "$ref": "#/components/schemas/Eventproperties"
                     }
                   }
                 }
               }
             },
             "500": {
-              "description": "Internal server error"
+              "description": "Szerver hiba!"
             }
           }
         }
@@ -69,21 +102,42 @@
           "summary": "Következő esemény",
           "description": "Visszaadja a következő esemény fő adatait.",
           "tags": [
-            "Event"
+            "Event informations"
           ],
           "responses": {
             "200": {
-              "description": "The details of the next upcoming event",
+              "description": "A következő esemény részletei",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/Event"
+                    "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "date": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "city": {
+                            "type": "string"
+                          },
+                          "street": {
+                            "type": "string"
+                          },
+                          "house_number": {
+                            "type": "string"
+                          }
+                        }
+                      }
                   }
                 }
               }
             },
             "500": {
-              "description": "Internal server error"
+              "description": "Szerver hiba!"
             }
           }
         }
@@ -94,13 +148,13 @@
           "summary": "Az események kategóriák szerinti szűrése",
           "description": "Visszaadja az összes eseményt a megadott kategóriák alapján szűrve.",
           "tags": [
-            "Event"
+            "Event informations"
           ],
           "parameters": [
             {
               "name": "categories",
               "in": "path",
-              "description": "Az események kategóriái vesszővel elválasztva",
+              "description": "Keresés az esemény kategóriákra",
               "required": true,
               "schema": {
                 "type": "string"
@@ -115,7 +169,7 @@
                   "schema": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Event"
+                      "$ref": "#/components/schemas/Eventproperties"
                     }
                   }
                 }
@@ -144,11 +198,11 @@
           "summary": "Archívum",
           "description": "Korábbi események listája",
           "tags": [
-            "Event"
+            "Event informations"
           ],
           "responses": {
             "200": {
-              "description": "Successful operation",
+              "description": "Sikeres lekérdezés",
               "content": {
                 "application/json": {
                   "schema": {
@@ -161,11 +215,19 @@
               }
             },
             "500": {
-              "description": "Error",
+              "description": "Szerver hiba!",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/Error"
+                    "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "integer"
+                        }
+                      }
                   }
                 }
               }
@@ -186,7 +248,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserRegistration"
+                  "$ref": "#/components/schemas/NewRegistration"
                 }
               }
             }
@@ -195,9 +257,7 @@
             "200": {
               "description": "Sikeres regisztráció"
             },
-            "400": {
-              "description": "Érvénytelen regisztrációs adatok"
-            },
+
             "500": {
               "description": "Hiba történt a regisztráció során"
             }
@@ -222,7 +282,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AdminRegistration"
+                  "$ref": "#/components/schemas/NewRegistration"
                 }
               }
             }
@@ -233,7 +293,12 @@
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/SuccessResponse"
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      }
+                    }                  
                   }
                 }
               }
@@ -243,7 +308,15 @@
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/ErrorResponse"
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      },
+                      "code": {
+                        "type": "integer"
+                      }
+                    }
                   }
                 }
               }
@@ -253,7 +326,15 @@
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/ErrorResponse"
+                    "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "integer"
+                        }
+                      }
                   }
                 }
               }
@@ -285,13 +366,13 @@
           },
           "responses": {
             "200": {
-              "description": "New event has been created successfully."
+              "description": "Az új esemény sikeresen létrehozva"
             },
             "401": {
               "description": "Unauthorized. Token is missing or invalid."
             },
             "500": {
-              "description": "Internal server error occurred."
+              "description": "Szerver hiba!"
             }
           }
         }
@@ -310,7 +391,7 @@
               "in": "path",
               "name": "user_id",
               "required": true,
-              "description": "The ID of the user whose applied events to retrieve.",
+              "description": "A felhasználó ID-ja, akinek le szeretnénk kérdezni a regisztrált eseményeit",
               "schema": {
                 "type": "integer",
                 "format": "int64"
@@ -319,20 +400,43 @@
           ],
           "responses": {
             "200": {
-              "description": "A list of events the user has applied to.",
+              "description": "A felhasználó által jelentkezett események listája.",
               "content": {
                 "application/json": {
                   "schema": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Event"
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "loc_id": {
+                          "type": "integer"
+                        },
+                        "city": {
+                          "type": "string"
+                        },
+                        "street": {
+                          "type": "string"
+                        },
+                        "house_number": {
+                          "type": "string"
+                        },
+                        "formatted_date": {
+                          "type": "string"
+                        }
+                      }
                     }
                   }
                 }
               }
             },
             "500": {
-              "description": "Internal server error occurred.",
+              "description": "Szerver hiba!",
               "content": {
                 "application/json": {
                   "schema": {
@@ -349,7 +453,7 @@
           "summary": "Az események korhatár szerinti szűrése",
           "description": "Visszaadja az összes eseményt a megadott korhatár alapján szűrve.",
           "tags": [
-            "Event"
+            "Event informations"
           ],
           "parameters": [
             {
@@ -372,7 +476,7 @@
                   "schema": {
                     "type": "array",
                     "items": {
-                      "$ref": "#/components/schemas/Event"
+                      "$ref": "#/components/schemas/Eventproperties"
                     }
                   }
                 }
@@ -401,13 +505,13 @@
           "summary": "Belépőkód ellenőrzés",
           "description": "Visszaadja a belépőkódhoz tartozó esemény és felhasználó fontos adatait.",
           "tags": [
-            "Event"
+            "Event informations"
           ],
           "parameters": [
             {
               "name": "pass_code",
               "in": "path",
-              "description": "Pass code of the event to be retrieved",
+              "description": "Lekérdezendő belépési kód",
               "required": true,
               "schema": {
                 "type": "string"
@@ -416,17 +520,37 @@
           ],
           "responses": {
             "200": {
-              "description": "OK",
+              "description": "Sikeres lekérdezés",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/Event"
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "event_name": {
+                          "type": "string"
+                        },
+                        "event_date": {
+                          "type": "string"
+                        },
+                        "user_name": {
+                          "type": "string"
+                        },
+                        "user_birthdate": {
+                          "type": "string"
+                        },
+                        "user_pass": {
+                          "type": "string"
+                        }
+                      }
+                    }
                   }
                 }
               }
             },
             "500": {
-              "description": "Internal Server Error",
+              "description": "Szerver hiba!",
               "content": {
                 "application/json": {
                   "schema": {
@@ -509,7 +633,7 @@
             }
           ],
           "requestBody": {
-            "description": "User email and password",
+            "description": "Regisztráció során megadott email cím, és jelenlegi jelszó",
             "required": true,
             "content": {
               "application/json": {
@@ -533,17 +657,45 @@
           },
           "responses": {
             "200": {
-              "description": "Successful login",
+              "description": "Sikeres bejelentkezés",
               "content": {
                 "application/json": {
                   "schema": {
-                    "$ref": "#/components/schemas/User"
+                    "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "password": {
+                          "type": "string"
+                        },
+                        "gender": {
+                          "type": "string"
+                        },
+                        "permission": {
+                          "type": "string"
+                        },
+                        "birthdate": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "nationality": {
+                          "type": "string"
+                        }
+                      }
                   }
                 }
               }
             },
             "401": {
-              "description": "Invalid email or password",
+              "description": "Helytelen belépési adatok",
               "content": {
                 "application/json": {
                   "schema": {
@@ -552,7 +704,7 @@
                       "message": {
                         "type": "string",
                         "description": "Error message",
-                        "example": "Invalid email or password."
+                        "example": "Érvénytelen email vagy jelszó"
                       },
                       "email": {
                         "type": "string",
@@ -565,7 +717,7 @@
               }
             },
             "500": {
-              "description": "Server error",
+              "description": "Szerver hiba!",
               "content": {
                 "application/json": {
                   "schema": {
@@ -602,7 +754,7 @@
             {
               "in": "body",
               "name": "body",
-              "description": "User information",
+              "description": "Esemény és felhasználó adatai",
               "required": true,
               "schema": {
                 "type": "object",
@@ -650,7 +802,7 @@
           ],
           "responses": {
             "200": {
-              "description": "Successful response.",
+              "description": "Sikeres jelentkezés!",
               "schema": {
                 "type": "object",
                 "properties": {
@@ -662,7 +814,7 @@
               }
             },
             "400": {
-              "description": "Bad request response.",
+              "description": "Hibás kérés!",
               "schema": {
                 "type": "object",
                 "properties": {
@@ -689,7 +841,7 @@
               }
             ],
             "requestBody": {
-              "description": "Location application data",
+              "description": "Lemondáshoz szükséges adatok",
               "required": true,
               "content": {
                 "application/json": {
@@ -715,7 +867,7 @@
                     },
                     "required": [
                       "locationId",
-                      "userId",
+                      "userID",
                       "eventId",
                       "userEmail"
                     ]
@@ -725,13 +877,13 @@
             },
             "responses": {
               "200": {
-                "description": "Application cancelled successfully"
+                "description": "Jelentkezés visszamondva!"
               },
               "401": {
                 "description": "Unauthorized"
               },
               "500": {
-                "description": "Internal server error"
+                "description": "Szerver hiba!"
               }
             }
           }
@@ -747,10 +899,10 @@
             {
               "in": "body",
               "name": "body",
-              "description": "Email address of the user",
+              "description": "Regisztráció során megadott email cím",
               "required": true,
               "schema": {
-                "$ref": "#/components/schemas/ForgotPasswordRequest"
+                "$ref": "#/components/schemas/ForgotPassword"
               }
             }
           ],
@@ -768,7 +920,7 @@
               }
             },
             "500": {
-              "description": "Internal Server Error",
+              "description": "Szerver hiba!",
               "schema": {
                 "description": "Szerverhiba"
               }
@@ -787,22 +939,22 @@
             {
               "in": "body",
               "name": "body",
-              "description": "User ID and old and new passwords",
+              "description": "Felhasználó jelszóváltoztatása",
               "required": true,
               "schema": {
-                "$ref": "#/components/schemas/ChangePasswordRequest"
+                "$ref": "#/components/schemas/ChangePassword"
               }
             }
           ],
           "responses": {
             "200": {
-              "description": "Success",
+              "description": "Sikeres jelszóváltoztatás",
               "schema": {
                 "description": "Sikeres jelszóváltoztatás"
               }
             },
             "400": {
-              "description": "Bad Request",
+              "description": "Hibás kérés",
               "schema": {
                 "description": "Hibás kérés"
               }
@@ -820,7 +972,7 @@
               }
             },
             "500": {
-              "description": "Internal Server Error",
+              "description": "Szerver hiba!",
               "schema": {
                 "description": "Szerverhiba"
               }
@@ -831,7 +983,7 @@
 "/docs/deleteEvent/{id}": {
   "delete": {
     "tags": [
-      "Event"
+      "Admin process"
     ],
     "summary": "Esemény törlése",
     "parameters": [
@@ -937,51 +1089,56 @@
     },
     "components": {
       "schemas": {
-        "User": {
+        "Eventproperties": {
           "type": "object",
-          "required": [
-            "username",
-            "email"
-          ],
-          "properties": {
-            "username": {
-              "type": "string"
-            },
-            "email": {
-              "type": "string",
-              "format": "email"
-            },
-            "firstName": {
-              "type": "string"
-            },
-            "lastName": {
-              "type": "string"
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "formatted_date": {
+                "type": "string"
+              },
+              "agelimit": {
+                "type": "integer"
+              },
+              "url_link": {
+                "type": "string",
+                "format": "uri"
+              },
+              "description": {
+                "type": "string"
+              },
+              "loc_id": {
+                "type": "integer"
+              },
+              "city": {
+                "type": "string"
+              },
+              "street": {
+                "type": "string"
+              },
+              "house_number": {
+                "type": "string"
+              },
+              "capacity": {
+                "type": "integer"
+              },
+              "applied": {
+                "type": "integer"
+              },
+              "performer_name": {
+                "type": "string"
+              }
             }
-          }
         },
-        "Event": {
-          "type": "object",
-          "required": [
-            "name",
-            "date"
-          ],
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "date": {
-              "type": "string",
-              "format": "date"
-            },
-            "description": {
-              "type": "string"
-            },
-            "location": {
-              "type": "string"
-            }
-          }
-        },
-        "ForgotPasswordRequest":{
+        "ForgotPassword":{
           "type": "object",
           "properties": {
             "email": {
@@ -992,7 +1149,7 @@
           },
           "required": ["email"]
         },
-        "ChangePasswordRequest":{
+        "ChangePassword":{
           "type": "object",
           "properties": {
             "id": {
@@ -1036,76 +1193,7 @@
             }
           }
         },
-        "SuccessResponse": {
-          "type": "object",
-          "properties": {
-            "message": {
-              "type": "string"
-            }
-          }
-        },
-        "ErrorResponse": {
-          "type": "object",
-          "properties": {
-            "message": {
-              "type": "string"
-            },
-            "code": {
-              "type": "integer"
-            }
-          }
-        },
-        "Error": {
-          "type": "object",
-          "properties": {
-            "message": {
-              "type": "string"
-            },
-            "code": {
-              "type": "integer"
-            }
-          }
-        },
-        "UserRegistration": {
-          "type": "object",
-          "required": [
-            "name",
-            "email",
-            "password",
-            "password_match",
-            "citizenship",
-            "gender",
-            "birthday"
-          ],
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "email": {
-              "type": "string",
-              "format": "email"
-            },
-            "password": {
-              "type": "string",
-              "description": "Jelszó"
-            },
-            "password_match": {
-              "type": "string",
-              "description": "Jelszó mégegyszer"
-            },
-            "citizenship": {
-              "type": "string"
-            },
-            "gender": {
-              "type": "string"
-            },
-            "birthday": {
-              "type": "string",
-              "format": "date"
-            }
-          }
-        },
-        "AdminRegistration": {
+        "NewRegistration": {
           "type": "object",
           "required": [
             "name",
@@ -1170,7 +1258,7 @@
             "eventDay": {
               "type": "string",
               "description": "Esemény dátuma",
-              "example": "2023-06-30"
+              "example": "2023-05-30T00:00:00"
             },
             "eventCategory": {
               "type": "string",
@@ -1178,12 +1266,10 @@
               "example": "Zene (Koncert)"
             },
             "eventPerformers": {
-              "type": "array",
+              "type": "string",
               "description": "Fellépő neve",
-              "items": {
-                "type": "string",
-                "example": "Ed Sheeran"
-              }
+              "example": "Ed Sheeran"
+
             },
             "eventCity": {
               "type": "string",

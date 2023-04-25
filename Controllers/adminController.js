@@ -1,5 +1,5 @@
-connectionst bcrypt = require('bcrypt');
-connectionst connection = require('../connectionfig/database')
+const bcrypt = require('bcrypt');
+const connection = require('../Config/database')
 
 // ÚJ ESEMÉNY LÉTREHOZÁSA
 function AddNewEvent(connection) {
@@ -15,13 +15,13 @@ function AddNewEvent(connection) {
       var eventAge = ageLimits[req.body.eventAgelimit] || 0;
 
       // Adatbázis feltöltése
-      connectionst insertEvent = new Promise((resolve, reject) => {
+      const insertEvent = new Promise((resolve, reject) => {
         connection.query(
           "SELECT MAX(id) AS maxId FROM locations",
-          function (error, results) {
-            if (error) {
-              connectionsole.error("error retrieving max location id: " + error.stack);
-              reject(error);
+          function (err, results) {
+            if (err) {
+              console.error("Error retrieving max location id: " + err.stack);
+              reject(err);
             }
             var maxLocId = 1 + results[0].maxId; // az utolsó id érték
             connection.query(
@@ -35,12 +35,12 @@ function AddNewEvent(connection) {
                 req.body.eventCategory,
                 maxLocId,
               ],
-              function (error) {
-                if (error) {
-                  connectionsole.error("Hiba történt az adatok felvitele során [eventproperties]: " + error.stack);
-                  reject(error);
+              function (err) {
+                if (err) {
+                  console.error("Hiba történt az adatok felvitele során [eventproperties]: " + err.stack);
+                  reject(err);
                 }
-                // connectionsole.log("Sikeres adatfelvitel az eventproperties táblába!");
+                // console.log("Sikeres adatfelvitel az eventproperties táblába!");
                 resolve();
               }
             );
@@ -48,21 +48,21 @@ function AddNewEvent(connection) {
         );
       });
 
-      connectionst insertPerformers = new Promise((resolve, reject) => {
+      const insertPerformers = new Promise((resolve, reject) => {
         connection.query(
           "INSERT INTO performers (name) VALUES (?)",
           [req.body.eventPerformers],
-          function (error) {
-            if (error) {
-              connectionsole.error("Hiba történt az adatok felvitele során [performers]: " + error.stack);
-              reject(error);
+          function (err) {
+            if (err) {
+              console.error("Hiba történt az adatok felvitele során [performers]: " + err.stack);
+              reject(err);
             }
             resolve();
           }
         );
       });
 
-      connectionst insertLocations = new Promise((resolve, reject) => {
+      const insertLocations = new Promise((resolve, reject) => {
         connection.query(
           "INSERT INTO locations (city, street, house_number, capacity) VALUES (?,?,?,?)",
           [
@@ -71,10 +71,10 @@ function AddNewEvent(connection) {
             req.body.eventHno,
             req.body.eventCapacity,
           ],
-          function (error) {
-            if (error) {
-              connectionsole.error("Hiba történt az adatok felvitele során [locations]: " + error.stack);
-              reject(error);
+          function (err) {
+            if (err) {
+              console.error("Hiba történt az adatok felvitele során [locations]: " + err.stack);
+              reject(err);
             }
             resolve();
           }
@@ -84,7 +84,7 @@ function AddNewEvent(connection) {
       // Megvárjuk, hogy az összes adatbázis művelet befejeződjön
       await Promise.all([insertEvent, insertPerformers, insertLocations]);
 
-      connectionst getLastEventId = () => {
+      const getLastEventId = () => {
         return new Promise((resolve, reject) => {
           connection.query(
             "SELECT id FROM eventproperties ORDER BY id DESC LIMIT 1",
@@ -100,7 +100,7 @@ function AddNewEvent(connection) {
       };
 
       // Utolsó beszúrt id lekérdezése a performers táblából
-      connectionst getLastPerformerId = () => {
+      const getLastPerformerId = () => {
         return new Promise((resolve, reject) => {
           connection.query(
             "SELECT id FROM performers ORDER BY id DESC LIMIT 1",
@@ -116,33 +116,31 @@ function AddNewEvent(connection) {
       };
 
       // Beszúrás az events_perfomers táblába
-      connectionst insertEventsPerformers = async () => {
+      const insertEventsPerformers = async () => {
         try {
-          connectionst lastEventId = await getLastEventId();
-          connectionst lastPerformerId = await getLastPerformerId();
-          connectionst query ="INSERT INTO events_perfomers (performs_id, events_id) VALUES (?, ?);";
+          const lastEventId = await getLastEventId();
+          const lastPerformerId = await getLastPerformerId();
+          const query ="INSERT INTO events_perfomers (performs_id, events_id) VALUES (?, ?);";
 
-          connectionst values = [lastPerformerId,lastEventId, ];
+          const values = [lastPerformerId,lastEventId, ];
           connection.query(query, values, (error, results) => {
             if (error) {
-              connectionsole.error(
+              console.error(
                 "Hiba történt az adatok felvitele során [events_perfomers >< ]:" + error.stack
               );
               return;
             }
-            // connectionsole.log("Sikeres adatfelvitel az events_perfomers kapcsolótáblába!");
+            // console.log("Sikeres adatfelvitel az events_perfomers kapcsolótáblába!");
           });
         } catch (error) {
-          connectionsole.error("Hiba az utolsó ID feltöltése során!" + error.stack);
+          console.error("Hiba az utolsó ID feltöltése során!" + error.stack);
         }
       };
 
       insertEventsPerformers();
-      res.redirect("/adminpage");
 
     } catch (e) {
-      connectionsole.log(e);
-      res.redirect("/adminpage");
+      console.log(e);
     }
   };
 }
@@ -151,14 +149,14 @@ function AddNewEvent(connection) {
 // ÚJ ADMINISZTRÁTOR RÖGZÍTÉSE
 function AddNewAdmin(connection, fs) {
   return async (req, res) => {
-    connectionst password = req.body.password;
-    connectionst password2 = req.body.password_match;
+    const password = req.body.password;
+    const password2 = req.body.password_match;
     if (password == password2) {
       try {
         // Email ellenőrzése
-        connection.query(`SELECT * FROM users WHERE email="${req.body.email}"`, async (error, results) => {
-          if (error) {
-            connectionsole.error('Hiba a regisztráció során: ' + error.stack);
+        connection.query(`SELECT * FROM users WHERE email="${req.body.email}"`, async (err, results) => {
+          if (err) {
+            console.error('Hiba a regisztráció során: ' + err.stack);
             return res.redirect("/");
           }
           if (results.length > 0) {
@@ -166,7 +164,7 @@ function AddNewAdmin(connection, fs) {
             return res.redirect("/");
           }
           // Ha az e-mail cím még nem szerepel az adatbázisban, akkor a felhasználói adatokat hozzáadjuk
-          connectionst hashedPassword = await bcrypt.hash(req.body.password, 10);
+          const hashedPassword = await bcrypt.hash(req.body.password, 10);
           connection.query(`INSERT INTO users (name, email, password, nationality, gender, birthdate, permission) VALUES (
             "${req.body.name}", 
             "${req.body.email}", 
@@ -175,18 +173,18 @@ function AddNewAdmin(connection, fs) {
             "${req.body.gender}", 
             "${req.body.birthday}", 
             "admin"
-          )`, (error) => {
-            if (error) {
-              connectionsole.error('Hiba a regisztráció során: ' + error.stack);
+          )`, (err) => {
+            if (err) {
+              console.error('Hiba a regisztráció során: ' + err.stack);
               return res.redirect("/");
             }
-            // connectionsole.log('Sikeresen hozzáadta az admin-t!');
+            // console.log('Sikeresen hozzáadta az admin-t!');
             res.redirect("/");
           });
         });
         
       } catch (e) {
-        connectionsole.log(e);
+        console.log(e);
       }
     } else {
       res.locals.message = "A két jelszó nem egyezik!";
@@ -197,52 +195,89 @@ function AddNewAdmin(connection, fs) {
 
 
 // ESEMÉNY TÖRLÉSE 
-function deleteEvent(id) {
+function deleteEvent(id, callback) {
 
   // 1. LÉPÉS: users_events kapcsolótáblából való törlés
-  connection.query(`SELECT * FROM users_events WHERE events_id=${id};`, (error, result) => {
-    if (error) throw error;
-
-  // Az events_perfomers táblából történő törlés
-    connection.query(`DELETE FROM users_events WHERE events_id = ${id};`, (error, result) => {
-      if (error) throw error;
-      // connectionsole.log(`A(z) ${id} azonosítójú rekord törölve lett az users_events táblából.`);
-    });
-  });
-
-  // 2. LÉPÉS: Kapcsolótáblából+Performers való törlés
-  connection.query(`SELECT performs_id FROM events_perfomers WHERE events_id=${id};`, (error, result) => {
-    if (error) throw error;
-
-   // Az events_perfomers táblából történő törlés
-    connection.query(`DELETE FROM events_perfomers WHERE performs_id = ${result[0].performs_id};`, (error, result) => {
-      if (error) throw error;
-      // connectionsole.log(`A(z) ${result[0].performs_id} azonosítójú rekord törölve lett az events_perfomers táblából.`);
-    });
+  connection.query(`SELECT * FROM users_events WHERE events_id=${id};`, (err, result) => {
+    if (err) {
+      callback(500, 'Szerverhiba: Nem sikerült lekérni az users_events táblából.', null);
+      return;
+    }
 
     // Az events_perfomers táblából történő törlés
-    connection.query(`DELETE FROM performers WHERE id = ${result[0].performs_id};`, (error, result) => {
-      if (error) throw error;
-      // connectionsole.log(`A(z) ${result[0].performs_id} azonosítójú rekord törölve lett az performs táblából.`);
-    });
+    connection.query(`DELETE FROM users_events WHERE events_id = ${id};`, (err, result) => {
+      if (err) {
+        callback(500, 'Szerverhiba: Nem sikerült törölni az users_events táblából.', null);
+        return;
+      }
+      // console.log(`A(z) ${id} azonosítójú rekord törölve lett az users_events táblából.`);
 
-    // 3. LÉPÉS: Esemény + Esemény helyszín törlés
-    connection.query(`SELECT loc_id FROM eventproperties WHERE id=${id};`, (error, result) => {
-      if (error) throw error;
+      // 2. LÉPÉS: Kapcsolótáblából+Performers való törlés
+      connection.query(`SELECT performs_id FROM events_perfomers WHERE events_id=${id};`, (err, result) => {
+        if (err) {
+          callback(500, 'Szerverhiba: Nem sikerült lekérni az events_perfomers táblából.', null);
+          return;
+        }
 
-    // Az events_perfomers táblából történő törlés
-      connection.query(`DELETE FROM eventproperties WHERE loc_id = ${result[0].loc_id};`, (error, result) => {
-        if (error) throw error;
-        // connectionsole.log(`A(z) ${result[0].loc_id} azonosítójú rekord törölve lett az eventproperties táblából.`);
+        // Az events_perfomers táblából történő törlés
+        connection.query(`DELETE FROM events_perfomers WHERE performs_id = ${result[0].performs_id};`, (err, result) => {
+          if (err) {
+            callback(500, 'Szerverhiba: Nem sikerült törölni az events_perfomers táblából.', null);
+            return;
+          }
+          // console.log(`A(z) ${result[0].performs_id} azonosítójú rekord törölve lett az events_perfomers táblából.`);
+
+          // Az events_perfomers táblából történő törlés
+          connection.query(`DELETE FROM performers WHERE id = ${result[0].performs_id};`, (err, result) => {
+            if (err) {
+              callback(500, 'Szerverhiba: Nem sikerült törölni az performers táblából.', null);
+              return;
+            }
+            // console.log(`A(z) ${result[0].performs_id} azonosítójú rekord törölve lett az performs táblából.`);
+
+            // 3. LÉPÉS: Esemény + Esemény helyszín törlés
+            connection.query(`SELECT loc_id FROM eventproperties WHERE id=${id};`, (err, result) => {
+              if (err) {
+                callback(500, 'Szerverhiba: Nem sikerült lekérni az eventproperties táblából.', null);
+                return;
+              }
+
+              // Az events_perfomers táblából történő törlés
+              connection.query(`DELETE FROM eventproperties WHERE loc_id = ${result[0].loc_id};`, (err, result) => {
+                if (err) {
+                  callback(500, 'Szerverhiba: Nem sikerült törölni az eventproperties táblából.', null);
+                  return;
+                }
+                // console.log(`A(z) ${result[0].loc_id} azonosítójú rekord törölve lett az eventproperties táblából.`);
+  
+                // Az locations táblából történő törlés
+                connection.query(`DELETE FROM locations WHERE id = ${result[0].loc_id};`, (err, result) => {
+                  if (err) {
+                    callback(500, 'Szerverhiba: Nem sikerült törölni az locations táblából.', null);
+                    return;
+                  }
+                  // console.log(`A(z) ${result[0].loc_id} azonosítójú rekord törölve lett az locations táblából.`);
+  
+                  // 4. LÉPÉS: Esemény törlése
+                  connection.query(`DELETE FROM events WHERE id = ${id};`, (err, result) => {
+                    if (err) {
+                      callback(500, 'Szerverhiba: Nem sikerült törölni az events táblából.', null);
+                      return;
+                    }
+                    // console.log(`A(z) ${id} azonosítójú rekord törölve lett az events táblából.`);
+  
+                    // Sikeres törlés esetén 200-as státuszkód és sikeres üzenet visszaadása
+                    callback(200, 'Sikeresen törölve.', null);
+                  });
+                });
+              });
+            });
+          });
+        });
       });
-
-      // Az events_perfomers táblából történő törlés
-      connection.query(`DELETE FROM locations WHERE id = ${result[0].loc_id};`, (error, result) => {
-        if (error) throw error;
-        // connectionsole.log(`A(z) ${result[0].loc_id} azonosítójú rekord törölve lett az locations táblából.`);
-      });
     });
-  });
-}
+  }
+)}
+
 
 module.exports = {AddNewEvent,AddNewAdmin,deleteEvent};

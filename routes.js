@@ -101,25 +101,43 @@ router.get('/archive', (req, res) => {
 
 
 // Új esemény létrehozása (POST)
-router.post("/newevent",restriction, async (req, res, next) => {
-  await AddNewEvent(connection)(req, res);
+router.post("/newevent", restriction, async (req, res, next) => {
+  try {
+    await AddNewEvent(connection)(req, res);
+    res.status(200).send("Az esemény sikeresen hozzáadva!"); 
+  } catch (error) {
+    res.status(503).send("Szerver hiba történt.");
+  }
 });
 // Regisztráció  (POST)
 router.post("/signup", async (req, res, next) => {
-  await signUp(connection)(req, res);
+    await signUp(connection)(req, res);
 });
+
+
 
 // Admin regisztráció  (POST)
 router.post("/newadmin",restriction, async (req, res, next) => {
-  await AddNewAdmin(connection)(req, res);
+    try {
+      await AddNewAdmin(connection)(req, res);
+      res.status(200).send("Sikeresen hozzáadta az adminisztrátor!"); // Visszaküld 200-as státuszkóddal és sikeres üzenettel
+    } catch (error) {
+      res.status(500).send("Hiba történt a rögzítés során"); // Visszaküld 500-as státuszkóddal és hibás üzenettel
+    }
 });
 
 
 
 // Főoldali kapcsolati űrlap adatainak küldése   (POST)
-router.post('/sendForm', (req, res) => {
-  contactForm(req.body.senderName, req.body.senderEmail, req.body.subject, req.body.message);
-})
+router.post('/sendForm', async (req, res) => {
+  try {
+    await contactForm(req.body.senderName, req.body.senderEmail, req.body.subject, req.body.message);
+    res.status(200).send("Az űrlap sikeresen elküldve!"); // Visszaküld 200-as státuszkóddal és sikeres üzenettel
+  } catch (error) {
+    res.status(500).send("Szerver hiba történt."); // Visszaküld 500-as státuszkóddal és hibás üzenettel
+  }
+});
+
 
 
 
@@ -170,36 +188,54 @@ router.post('/applyToLocation',restriction, (req, res) => {
 });
 
 // Jelentkezés visszamondása
-router.post('/cancelApplication',restriction, (req, res) => {
-  cancelApplication(req.body.locationId,req.body.userID,req.body.eventId,req.body.userEmail); 
+router.post('/cancelApplication', restriction, async (req, res) => {
+  try {
+    await cancelApplication(req.body.locationId, req.body.userID, req.body.eventId, req.body.userEmail);
+    res.status(200).send("Sikeresen visszavontad a jelentkezést!"); // Visszaküld 200-as státuszkóddal és sikeres üzenettel
+  } catch (error) {
+    res.status(503).send("Szerver hiba történt."); // Visszaküld 503-as státuszkóddal és hibás üzenettel
+  }
 });
 
 
 // Elfelejtett jelszó  (PUT)
-router.put("/forgotpassword",restriction, async (req, res, next) => {
-  await forgotPassword(req.body.email);(req, res);
+router.put("/forgotpassword",restriction, async (req, res) => {
+  try {
+    res.status(200).send("Az új jelszó elküldve az e-mail címre!"); // Visszaküld 200-as státuszkóddal és sikeres üzenettel
+  } catch (error) {
+    if (error instanceof BadRequestError) {
+      res.status(400).send("Hibás kérés."); // Visszaküld 400-as státuszkóddal és hibás üzenettel
+    } else {
+      res.status(500).send("Szerver hiba történt."); // Visszaküld 500-as státuszkóddal és hibás üzenettel
+    }
+  }
+  console.log(req.body.email)
 });
 
 
 // Jelszó frissítése  (PUT)
-router.put('/refreshPassword',restriction, (req, res) => {
-  changePassword(req.body.id, req.body.password_old, req.body.password_new, req.body.password_new_match, callbackPromise)
-})
+router.put('/refreshPassword', restriction, async (req, res) => {
+  try {
+    await changePassword(req.body.id, req.body.password_old, req.body.password_new, req.body.password_new_match, callbackPromise);
+    res.status(200).send("A jelszó sikeresen frissítve!"); // Visszaküld 200-as státuszkóddal és sikeres üzenettel
+  } catch (error) {
+    res.status(500).send("Szerver hiba történt."); // Visszaküld 500-as státuszkóddal és hibás üzenettel
+  }
+});
+
 
 
 // Esemény törlése ID alapján  (DELETE)
 router.delete("/deleteEvent/:id",restriction,(req, res,next) => {
   const id = req.params.id;
-  if (deleteEvent(id)) {res.send(`A(z) ${req.params.id} azonosítójú esemény törölve lett az adatbázisból.`);} 
-  else {res.status(404).send(`Nem található ${req.params.id} azonosítójú esemény.`);}
+  deleteEvent(id)
 });
 
 
 // User törlése ID alapján (DELETE)
 router.delete("/deleteUser/:id",restriction,(req, res,next) => {
   const id = req.params.id;
-  if (deleteUserById(id)) {res.send(`A(z) ${id} azonosítójú felhasználó törölve lett az adatbázisból.`);} 
-  else {res.status(404).send(`Nem található ${id} azonosítójú felhasználó.`);}
+  deleteUserById(id)
 });
 
 

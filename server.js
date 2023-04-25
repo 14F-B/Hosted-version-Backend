@@ -20,7 +20,10 @@ const swaggerDocument = require('./swagger.json');
 app
   .use(express.json())
   .use(express.urlencoded({ extended: false }))
-  .use(cors({origin:['https://goeventhungary.netlify.app', 'https://goeventdev.netlify.app','https://goeventapiservice.cyclic.app']}))
+  .use(cors({ 
+    origin: '*'
+}))
+
   .use(flash())
   .use(
     session({

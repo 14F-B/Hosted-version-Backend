@@ -18,7 +18,9 @@ function NextEventContent(callback) {
 function AllEvents() {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT eventproperties.id, eventproperties.name, eventproperties.date,DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS formatted_date, eventproperties.agelimit, eventproperties.url_link, eventproperties.description,
+      `SELECT eventproperties.id, eventproperties.name,eventproperties.category,  eventproperties.date,
+      DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS formatted_date, eventproperties.agelimit, 
+      eventproperties.url_link, eventproperties.description,
        eventproperties.loc_id, locations.city, locations.street, locations.house_number, 
        locations.capacity, locations.applied, performers.name as performer_name 
        FROM eventproperties JOIN locations ON eventproperties.loc_id = locations.id 

@@ -12,14 +12,14 @@ function signUp(connection) {
       try {
         // Email ellenőrzése
         const email = req.body.email;
-        connection.query(`SELECT * FROM users WHERE email="${email}"`, async (error, results) => {
-          if (error) {
-            console.error('Hiba a regisztráció során: ' + error.stack);
-            return res.redirect("/");
+        connection.query(`SELECT * FROM users WHERE email="${email}"`, async (err, results) => {
+          if (err) {
+            console.error('Hiba a regisztráció során: ' + err.stack);
+            return res.sendStatus(500); // 500 státuszkód hozzáadása
           }
           if (results.length > 0) {
             res.locals.message = "Az e-mail cím már használatban van!";
-            return res.redirect("/");
+            return res.sendStatus(200); // 200 státuszkód hozzáadása
           }
           // Ha az e-mail cím még nem szerepel az adatbázisban, akkor a felhasználói adatokat hozzáadjuk
           const hashedPassword = await bcrypt.hash(req.body.password, 10);
@@ -31,29 +31,31 @@ function signUp(connection) {
             "${req.body.gender}", 
             "${req.body.birthday}", 
             "user"
-          )`, (error) => {
-            if (error) {
-              console.error('Hiba a regisztráció során: ' + error.stack);
-              return res.redirect("/");
+          )`, (err) => {
+            if (err) {
+              console.error('Hiba a regisztráció során: ' + err.stack);
+              return res.sendStatus(500); // 500 státuszkód hozzáadása
             }
             // console.log('Sikeresen regisztráció');
-            res.redirect("/");
+            res.sendStatus(200); // 200 státuszkód hozzáadása
           });
         });
         
       } catch (e) {
         console.log(e);
+        res.sendStatus(500); // 500 státuszkód hozzáadása
       }
     } else {
       res.locals.message = "A két jelszó nem egyezik!";
-      res.redirect("/");
+      res.sendStatus(200); // 200 státuszkód hozzáadása
     }
   };
 }
 
 
 
-function forgotPassword(email) {
+
+async function forgotPassword(email) {
     connection.query(`SELECT * FROM users WHERE email = '${email}'`, async (error, results) => {
       if (error) {
         console.error(error);
@@ -67,7 +69,7 @@ function forgotPassword(email) {
           if (error) {
             console.error(error);
           } else {
-            // console.log("A jelszó sikeresen módosítva lett.");
+            console.log("A jelszó sikeresen módosítva lett.");
   
           }
           let mailTransporter = nodemailer.createTransport({
@@ -96,9 +98,9 @@ function forgotPassword(email) {
             `,
           };
         
-          mailTransporter.sendMail(details, (error) => {
-            if (error) {
-              // console.log("Hiba történt az email kiküldése során!", error);
+          mailTransporter.sendMail(details, (err) => {
+            if (err) {
+              console.log("Hiba történt az email kiküldése során!", err);
             } else {
               // console.log("Email elküldve!");
             }

@@ -1,16 +1,15 @@
 const connection = require("../Config/database");
 const nodemailer = require("nodemailer");
 const { v4: uuidv4 } = require("uuid");
-var QRCode = require("qrcode");
-const fs = require("fs");
+
 
 // FELHASZNÁLÓ TÖRLÉSE
 async function deleteUserById(id) {
   return new Promise((resolve, reject) => {
-    connection.getConnection(async (error, connection) => {
-      if (error) {
-        console.log(error);
-        reject(error);
+    connection.getConnection(async (err, connection) => {
+      if (err) {
+        console.log(err);
+        reject({ status: 500, message: "Hiba a kapcsolat létrehozásakor" });
         return;
       }
 
@@ -23,15 +22,22 @@ async function deleteUserById(id) {
 
         // console.log("Sikeres felhasználó törlés");
         connection.release();
-        resolve(true);
-      } catch (error) {
-        console.log(error);
+        resolve({ status: 200, message: "Felhasználó törlése sikeres" });
+      } catch (err) {
+        console.log(err);
         connection.release();
-        reject(error);
+        reject({ status: 500, message: "Hiba a felhasználó törlésekor" });
       }
     });
   });
 }
+
+
+
+
+
+
+
 
 // JELENTKEZÉS EGY ESEMÉNYRE
 function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
@@ -71,9 +77,9 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
               const alldataquery = `SELECT * FROM eventproperties 
                                     JOIN locations ON eventproperties.loc_id = locations.id 
                                     WHERE locations.id = ${locationId};`;
-              connection.query(alldataquery, (queryerror, queryResults) => {
-                if (queryerror) {
-                  console.error(queryerror);
+              connection.query(alldataquery, (queryError, queryResults) => {
+                if (queryError) {
+                  console.error(queryError);
                 } else {
                   const date = new Date(queryResults[0].date);
                   const formattedDate = new Intl.DateTimeFormat("hu-HU", {
@@ -124,9 +130,9 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
                 `,
                   };
       
-                  mailTransporter.sendMail(details, (error) => {
-                    if (error) {
-                      // console.log("Hiba történt az email küldése közben!", error);
+                  mailTransporter.sendMail(details, (err) => {
+                    if (err) {
+                      // console.log("Hiba történt az email küldése közben!", err);
                     } else {
                       // console.log("Email elküldve!");
       
@@ -152,24 +158,24 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
 // ESEMÉNY VISSZAMONDÁSA
 function cancelApplication(locationId, userId, eventId, email) {
   const checkQuery = `SELECT * FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
-  connection.query(checkQuery, (checkerror, checkResults) => {
-    if (checkerror) {
-      console.error(checkerror);
+  connection.query(checkQuery, (checkError, checkResults) => {
+    if (checkError) {
+      console.error(checkError);
     } else if (checkResults.length === 0) {
       // console.error("A megadott felhasználó és esemény páros nem található az adatbázisban");
     } else {
       // Kapcsolótábla rekordjának törlése
       const query2 = `DELETE FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
-      connection.query(query2, (deleteerror, deleteResults) => {
-        if (deleteerror) {
-          console.error(deleteerror);
+      connection.query(query2, (deleteError, deleteResults) => {
+        if (deleteError) {
+          console.error(deleteError);
         } else {
           const alldataquery = `SELECT * FROM eventproperties 
                                 JOIN locations ON eventproperties.loc_id = locations.id 
                                 WHERE locations.id = ${locationId};`;
-          connection.query(alldataquery, (queryerror, queryResults) => {
-            if (queryerror) {
-              console.error(queryerror);
+          connection.query(alldataquery, (queryError, queryResults) => {
+            if (queryError) {
+              console.error(queryError);
             } else {
               // Visszamondó email kiküldése
               let mailTransporter = nodemailer.createTransport({
@@ -200,11 +206,11 @@ function cancelApplication(locationId, userId, eventId, email) {
                 Üdvözlettel: GO EVENT! Csapata
                 `,
               };
-              mailTransporter.sendMail(details, (error) => {
-                if (error) {
-                  // console.log("Hiba történt az email küldése közben!", error);
+              mailTransporter.sendMail(details, (err) => {
+                if (err) {
+                  console.log("Hiba történt az email küldése közben!", err);
                 } else {
-                  // console.log("Email elküldve!");
+                  console.log("Email elküldve!");
                 }
               });
             }
@@ -255,9 +261,9 @@ function contactForm(senderName, senderEmail, subject, message) {
                         <span style="font-weight:bold; padding:16px; color: #131647;">Kitöltés dátuma: </span>${date_format}<br>`,
   };
 
-  mailTransporter.sendMail(details, (error) => {
-    if (error) {
-      console.log("Hiba az email kiküldése során!", error);
+  mailTransporter.sendMail(details, (err) => {
+    if (err) {
+      console.log("Hiba az email kiküldése során!", err);
     } else {
       // console.log("Email elküldve!");
     }
