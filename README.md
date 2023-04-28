@@ -1,6 +1,17 @@
 # Hosted version (Backend)
 [Swagger documentation - https://goeventapiservice.cyclic.app ](https://goeventapiservice.cyclic.app)
 
+## ÉRTÉKELÉSHEZ INFORMÁCIÓK  
+- Swagger minden route-ot kiszolgál, beállítottuk hogy lehessen tesztelni. Autentikáció nélkül megkülönböztetés nélkül.  
+- Esemény/ Felhasználó törlés esetenként többszöri "Execute" hatására törlődik adatbázisból  
+- Példa egy partner oldal és egy olyan oldalra aki ismerte a route-okat azonban nem jogosult a használatára:  
+  - Hálózatunkba csatlakozott oldal: https://goeventdev.netlify.app/  
+  - Külsős oldal, aki csak GET kéréseket kérdezhet le:  https://hosted-version-frontend.vercel.app/  
+  
+Belépési adatok: 
+Admin: goeventhungary@gmail.com **jelszó:** goevent_ABR  
+Általános user: soosliza0712@freemail.hu **jelszó:** soosliza0712  
+
 
 
 ## Ismertető
