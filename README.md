@@ -2,7 +2,7 @@
 [Swagger documentation - https://goeventapiservice.cyclic.app ](https://goeventapiservice.cyclic.app)
 
 ## ÉRTÉKELÉSHEZ INFORMÁCIÓK  
-- Swagger minden route-ot kiszolgál, beállítottuk hogy lehessen tesztelni. Autentikáció nélkül megkülönböztetés nélkül.  
+- Swagger minden route-ot kiszolgál, beállítottuk hogy lehessen tesztelni autentikáció/ megkülönböztetés nélkül.  
 - Esemény/ Felhasználó törlés esetenként többszöri "Execute" hatására törlődik adatbázisból  
 - Példa egy partner oldal és egy olyan oldalra aki ismerte a route-okat azonban nem jogosult a használatára:  
   - Hálózatunkba csatlakozott oldal: https://goeventdev.netlify.app/  
