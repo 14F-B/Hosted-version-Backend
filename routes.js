@@ -16,122 +16,116 @@ const restriction = require('./Middlewares/restriction');
 // Controllers
 // API hívások
 const { AllEvents, getUsers, getAppliedEvents, ArchivedEvents,
-        NextEventContent, eventsByCategories,eventsByAge,eventPass} = require('./Controllers/queryController');
+        NextEventContent, eventsByCategories, eventsByAge, eventPass } = require('./Controllers/queryController');
 
 //Bejelentkezés és regisztrációs folyamatok
-const {signUp,forgotPassword,changePassword } = require("./Controllers/authController"); 
+const { signUp,login, forgotPassword, changePassword } = require("./Controllers/authController");
 
 //Adminisztrációs folyamatok
-const {AddNewEvent,AddNewAdmin,deleteEvent } = require("./Controllers/adminController");
+const { AddNewEvent, AddNewAdmin, deleteEvent } = require("./Controllers/adminController");
 
 //Felhasználói folyamatok
-const { deleteUserById,applyToLocation, cancelApplication, contactForm } = require('./Controllers/userController');
-
-//Callback
-const { callbackPromise } = require("nodemailer/lib/shared");
-const { log } = require("async");
+const { deleteUserById, applyToLocation, cancelApplication, contactForm } = require('./Controllers/userController');
 
 
+/****************************************************************************
+************************* G e t   r e q u e s t s ***************************
+****************************************************************************/
 
-
-// Következő esemény  (GET)
+// Következő esemény
 router.get('/nextevent', (req, res) => {
   NextEventContent((error, results) => {
-    if (error) {return res.status(500).json({ error: 'Adatbázis hiba!' });}
-    res.type('json').send(JSON.stringify(results, null, 2));    
+    if (error) { return res.status(500).json({ error: 'Adatbázis hiba!' }); }
+    res.type('json').send(JSON.stringify(results, null, 2));
   });
 });
 
 
-// Összes jövőbeli esemény  (GET)
-router.get('/allevents',  (req, res) => {
+// Összes jövőbeli esemény
+router.get('/allevents', (req, res) => {
   AllEvents()
-  .then((results) => {res.type('json').send(JSON.stringify(results, null, 2));})
-  .catch((error) => {res.status(500).send('Hiba az adatok letöltése során! (Adatbázis hiba)'+(error));});
+    .then((results) => { res.type('json').send(JSON.stringify(results, null, 2)); })
+    .catch((error) => { res.status(500).send('Hiba az adatok letöltése során! (Adatbázis hiba)' + (error)); });
 });
 
 
-// Összes felhasználó adata  (GET)
-router.get('/allusers',restriction, (req, res) => {
+// Összes felhasználó adata
+router.get('/allusers', restriction, (req, res) => {
   getUsers()
-  .then((results) => {res.type('json').send(JSON.stringify(results, null, 2));       })
-  .catch((error) => {res.status(500).send('Hiba az adatok letöltése során! (Adatbázis hiba)'+(error));});
+    .then((results) => { res.type('json').send(JSON.stringify(results, null, 2)); })
+    .catch((error) => { res.status(500).send('Hiba az adatok letöltése során! (Adatbázis hiba)' + (error)); });
 });
 
 
-// Események kategóriánként  (GET)
-router.get('/eventcategory/:categories', function(req, res) {
+// Események kategóriánként
+router.get('/eventcategory/:categories', function (req, res) {
   eventsByCategories(req.params.categories)
-    .then(results => {res.type('json').send(JSON.stringify(results, null, 2));    })
-    .catch(error => {res.status(500).send(error);});
+    .then(results => { res.type('json').send(JSON.stringify(results, null, 2)); })
+    .catch(error => { res.status(500).send(error); });
 });
 
 
-// Események korhatár szerint  (GET)
-router.get('/eventagelimit/:agelimit', function(req, res) {
+// Események korhatár szerint
+router.get('/eventagelimit/:agelimit', function (req, res) {
   eventsByAge(req.params.agelimit)
-    .then(results => {res.type('json').send(JSON.stringify(results, null, 2));    
+    .then(results => {
+      res.type('json').send(JSON.stringify(results, null, 2));
     })
-    .catch(error => {res.status(500).send(error);});
+    .catch(error => { res.status(500).send(error); });
 });
 
 
-// Felhasználó regisztrált eseményei id alapján  (GET)
-router.get('/userapplied/:user_id',restriction, function(req, res) {
+// Felhasználó regisztrált eseményei id alapján
+router.get('/userapplied/:user_id', restriction, function (req, res) {
   getAppliedEvents(req.params.user_id)
-    .then(results => {res.type('json').send(JSON.stringify(results, null, 2));})
-    .catch(error => {res.status(500).send(error);});
+    .then(results => { res.type('json').send(JSON.stringify(results, null, 2)); })
+    .catch(error => { res.status(500).send(error); });
 });
 
 
-// Esemény személy ellenőrzése  (GET)
-router.get('/eventpass/:pass_code',restriction, function(req, res) {
+// Esemény személy ellenőrzése
+router.get('/eventpass/:pass_code', restriction, function (req, res) {
   eventPass(req.params.pass_code)
-    .then(results => {res.type('json').send(JSON.stringify(results, null, 2));})
-    .catch(error => {res.status(500).send(error);});
+    .then(results => { res.type('json').send(JSON.stringify(results, null, 2)); })
+    .catch(error => { res.status(500).send(error); });
 });
 
 
-// Események archívuma  (GET)
+// Események archívuma
 router.get('/archive', (req, res) => {
   ArchivedEvents()
-  .then((results) => {res.type('json').send(JSON.stringify(results, null, 2));})
-  .catch(error => {res.status(500).send('Hiba az adatok letöltése során! (Adatbázis hiba)\n'+(error));});
+    .then((results) => { res.type('json').send(JSON.stringify(results, null, 2)); })
+    .catch(error => { res.status(500).send('Hiba az adatok letöltése során! (Adatbázis hiba)\n' + (error)); });
 });
 
+/****************************************************************************
+************************ P o s t   r e q u e s t s **************************
+****************************************************************************/
 
-// Új esemény létrehozása (POST)
+// Autentikáció
+router.post("/signup",  signUp(connection) );
+router.post("/newadmin", restriction, AddNewAdmin(connection));
+router.post('/login', restriction ,login(connection));
+
+
+// Új esemény létrehozása 
 router.post("/newevent", restriction, async (req, res, next) => {
   try {
     await AddNewEvent(connection)(req, res);
-    res.status(200).send("Az esemény sikeresen hozzáadva!"); 
+    res.status(200).send("Az esemény sikeresen hozzáadva!");
   } catch (error) {
-    res.status(503).send("Szerver hiba történt.");
+    console.error(error);
+    res.status(500).send({ error: "Internal Server Error", message: error.message });
   }
 });
-// Regisztráció  (POST)
-router.post("/signup", async (req, res, next) => {
-    await signUp(connection)(req, res);
-});
 
 
 
-// Admin regisztráció  (POST)
-router.post("/newadmin",restriction, async (req, res, next) => {
-    try {
-      await AddNewAdmin(connection)(req, res);
-      res.status(200).send("Sikeresen hozzáadta az adminisztrátor!"); // Visszaküld 200-as státuszkóddal és sikeres üzenettel
-    } catch (error) {
-      res.status(500).send("Hiba történt a rögzítés során"); // Visszaküld 500-as státuszkóddal és hibás üzenettel
-    }
-});
 
-
-
-// Főoldali kapcsolati űrlap adatainak küldése   (POST)
-router.post('/sendForm', async (req, res) => {
+// Főoldali kapcsolati űrlap adatainak küldése
+router.post('/sendForm', (req, res) => {
   try {
-    await contactForm(req.body.senderName, req.body.senderEmail, req.body.subject, req.body.message);
+    contactForm(req.body.senderName, req.body.senderEmail, req.body.subject, req.body.message);
     res.status(200).send("Az űrlap sikeresen elküldve!"); // Visszaküld 200-as státuszkóddal és sikeres üzenettel
   } catch (error) {
     res.status(500).send("Szerver hiba történt."); // Visszaküld 500-as státuszkóddal és hibás üzenettel
@@ -140,51 +134,18 @@ router.post('/sendForm', async (req, res) => {
 
 
 
-
-// Bejelentkezés  (POST)
-router.post('/login',restriction, (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  
-  // Email alapján felhasználó adatainak lekérése
-  connection.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
-    if (err) {
-      console.log(err);
-      res.status(500).json({ message: "Hiba történt az adatbázis lekérdezése közben." });
-    } else if (result.length === 0) {
-      // Hibás email, vagy jelszó
-      res.status(401).json({ message: "Hibás email vagy jelszó.", email });
-    } else {
-      // Felhasználó adatainak elküldése a kliensnek
-      const user = result[0];
-      bcrypt.compare(password, user.password, (err, isMatch) => {
-        if (err) {
-          console.log(err);
-          res.status(500).json({ message: "Hiba történt a jelszó ellenőrzése közben." });
-        } else if (!isMatch) {
-          // Hibás email, vagy jelszó
-          res.status(401).json({ message: "Hibás email vagy jelszó.", email });
-        } else {
-          // Sikeres bejelentkezés, user adatainak elküldése a kliensnek
-          res.status(200).json({ user });
-        }
-      });
-    }
-  });
-});
-
 // Eseményre való jelentkezés
-router.post('/applyToLocation',restriction, (req, res) => {
+router.post('/applyToLocation', restriction, (req, res) => {
   // Felhasználó életkorának kiszámítása
-  const userAge = Math.round((new Date(req.body.eventDate)-new Date(req.body.userBirthday)) / (1000 * 60 * 60 * 24 * 365.25));
+  const userAge = Math.round((new Date(req.body.eventDate) - new Date(req.body.userBirthday)) / (1000 * 60 * 60 * 24 * 365.25));
 
   // Életkor vizsgálata
   if (userAge < req.body.agelimit) {
     return res.status(400).json({ message: "Nem vagy elég idős az eseményre való jelentkezéshez." });
   }
-  applyToLocation(req.body.locationId, req.body.userId, req.body.eventId, userAge, req.body.agelimit, req.body.userEmail); 
+  applyToLocation(req.body.locationId, req.body.userId, req.body.eventId, userAge, req.body.agelimit, req.body.userEmail);
   res.status(200).json({ message: "Sikeres jelentkezés!" });
-  
+
 });
 
 // Jelentkezés visszamondása
@@ -198,44 +159,73 @@ router.post('/cancelApplication', restriction, async (req, res) => {
 });
 
 
-// Elfelejtett jelszó  (PUT)
-router.put("/forgotpassword",restriction, async (req, res) => {
+/****************************************************************************
+************************* P u t   r e q u e s t s ***************************
+****************************************************************************/
+
+// Elfelejtett jelszó
+router.put('/forgotpassword', restriction, async (req, res) => {
   try {
-    res.status(200).send("Az új jelszó elküldve az e-mail címre!"); // Visszaküld 200-as státuszkóddal és sikeres üzenettel
+    const result = await forgotPassword(req.body.email);
+    res.status(200).send(result);
   } catch (error) {
-    if (error instanceof BadRequestError) {
-      res.status(400).send("Hibás kérés."); // Visszaküld 400-as státuszkóddal és hibás üzenettel
+    if (error.statusCode) {
+      res.status(error.statusCode).send(error.message);
     } else {
-      res.status(500).send("Szerver hiba történt."); // Visszaküld 500-as státuszkóddal és hibás üzenettel
+      res.status(500).send('A jelszó módosítása sikertelen volt.');
     }
   }
-  console.log(req.body.email)
 });
 
 
-// Jelszó frissítése  (PUT)
+// Jelszó frissítése
 router.put('/refreshPassword', restriction, async (req, res) => {
   try {
-    await changePassword(req.body.id, req.body.password_old, req.body.password_new, req.body.password_new_match, callbackPromise);
-    res.status(200).send("A jelszó sikeresen frissítve!"); // Visszaküld 200-as státuszkóddal és sikeres üzenettel
+    await changePassword(req.body.id, req.body.password_old, req.body.password_new, req.body.password_new_match);
+    // Sikeres jelszóváltoztatás
+    console.log('A jelszó sikeresen megváltoztatva.');
+    // 200-as státuszkód küldése
+    res.status(200).json({ message: 'A jelszó sikeresen megváltoztatva.' });
   } catch (error) {
-    res.status(500).send("Szerver hiba történt."); // Visszaküld 500-as státuszkóddal és hibás üzenettel
+    // Hiba kezelése
+    console.error(error);
+    if (error === 'not found') {
+      // 404-es státuszkód küldése
+      res.status(404).json({ message: 'Nem található!' });
+    } else {
+      // 500-as státuszkód küldése
+      res.status(500).json({ message: 'Hiba történt a jelszóváltoztatás során' });
+    }
   }
 });
 
 
+/****************************************************************************
+********************* D e l  e t e   r e q u e s t s ************************
+****************************************************************************/
 
-// Esemény törlése ID alapján  (DELETE)
-router.delete("/deleteEvent/:id",restriction,(req, res,next) => {
+// Esemény törlése ID alapján
+router.delete('/deleteEvent/:id', restriction, async (req, res) => {
   const id = req.params.id;
-  deleteEvent(id)
+  try {
+    const result = await deleteEvent(id);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json(error);
+  }
 });
 
 
-// User törlése ID alapján (DELETE)
-router.delete("/deleteUser/:id",restriction,(req, res,next) => {
+// User törlése ID alapján
+router.delete("/deleteUser/:id", restriction, async (req, res) => {
   const id = req.params.id;
-  deleteUserById(id)
+  try {
+    const result = await deleteUserById(id);
+    res.status(result.status).send({ message: result.message });
+  } catch (err) {
+    res.status(err.status).send({ error: "Internal Server Error", message: err.message });
+  }
+
 });
 
 

@@ -255,16 +255,68 @@
           },
           "responses": {
             "200": {
-              "description": "Sikeres regisztráció"
+              "description": "Sikeres adminisztrátor regisztráció",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      }
+                    }                  
+                  }
+                }
+              }
             },
-
+            "400": {
+              "description": "Hibás kérés",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Conflict / Ütközés",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
             "500": {
-              "description": "Hiba történt a regisztráció során"
+              "description": "Szerver hiba!",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                  }
+                }
+              }
             }
           }
         }
       },
-
       "/docs/newadmin": {
         "post": {
           "tags": [
@@ -303,8 +355,8 @@
                 }
               }
             },
-            "401": {
-              "description": "Hitelesítési hiba",
+            "400": {
+              "description": "Hibás kérés",
               "content": {
                 "application/json": {
                   "schema": {
@@ -312,9 +364,21 @@
                     "properties": {
                       "message": {
                         "type": "string"
-                      },
-                      "code": {
-                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "409": {
+              "description": "Conflict / Ütközés",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
                       }
                     }
                   }
@@ -322,7 +386,7 @@
               }
             },
             "500": {
-              "description": "Belső szerverhiba",
+              "description": "Szerver hiba!",
               "content": {
                 "application/json": {
                   "schema": {
@@ -330,9 +394,6 @@
                       "properties": {
                         "message": {
                           "type": "string"
-                        },
-                        "code": {
-                          "type": "integer"
                         }
                       }
                   }
@@ -895,34 +956,48 @@
           ],
           "summary": "Elfelejtett jelszó",
           "description": "Elfelejtett jelszó esetén új jelszó igénylése.",
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "description": "Regisztráció során megadott email cím",
-              "required": true,
-              "schema": {
-                "$ref": "#/components/schemas/ForgotPassword"
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForgotPassword"
+                }
               }
             }
-          ],
+          },
           "responses": {
             "200": {
               "description": "Success",
-              "schema": {
-                "description": "Az új jelszót megküldtük az email címére"
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string",
+                    "description": "Az új jelszót megküldtük az email címére"
+                  }
+                }
               }
             },
             "400": {
               "description": "Bad Request",
-              "schema": {
-                "description": "Hibás kérés"
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string",
+                    "description": "Az adott e-mail cím nem található az adatbázisban."
+                  }
+                }
               }
             },
             "500": {
               "description": "Szerver hiba!",
-              "schema": {
-                "description": "Szerverhiba"
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string",
+                    "description": "Szerverhiba"
+                  }
+                }
               }
             }
           }
@@ -935,17 +1010,16 @@
           ],
           "summary": "Jelszóváltoztatás",
           "description": "Felhasználó által ismert jelszó módosítása",
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "description": "Felhasználó jelszóváltoztatása",
-              "required": true,
-              "schema": {
-                "$ref": "#/components/schemas/ChangePassword"
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePassword"
+                }
               }
             }
-          ],
+          },
           "responses": {
             "200": {
               "description": "Sikeres jelszóváltoztatás",
@@ -1138,7 +1212,7 @@
               }
             }
         },
-        "ForgotPassword":{
+        "ForgotPassword": {
           "type": "object",
           "properties": {
             "email": {
@@ -1147,7 +1221,9 @@
               "description": "Email address of the user"
             }
           },
-          "required": ["email"]
+          "required": [
+            "email"
+          ]
         },
         "ChangePassword":{
           "type": "object",

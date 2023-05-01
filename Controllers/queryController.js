@@ -1,7 +1,6 @@
 const connection = require("../Config/database");
 
 // KÖVETKEZŐ ESEMÉNY
-
 function NextEventContent(callback) {
   connection.query(
     "SELECT name, date,city, street,house_number FROM eventproperties INNER JOIN locations ON eventproperties.loc_id = locations.id  WHERE date > NOW() ORDER BY date ASC LIMIT 1;",
@@ -89,7 +88,7 @@ function eventsByAge(agelimit) {
   });
 }
 
-// ESEMÉNY: QR KÓD ÉRVÉNYESSÉG
+// ESEMÉNY: BELÉPŐKÓD ELLENŐRZÉSE
 function eventPass(pass_code) {
   return new Promise((resolve, reject) => {
     connection.query(
@@ -112,7 +111,7 @@ function eventPass(pass_code) {
   });
 }
 
-// ARCHÍVÁLT ESEMÉNYEK (KORÁBBIAK)
+// ARCHÍVÁLT (KORÁBBI) ESEMÉNYEK
 function ArchivedEvents() {
   return new Promise((resolve, reject) => {
     connection.query(

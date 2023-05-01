@@ -40,7 +40,7 @@ async function deleteUserById(id) {
 
 
 // JELENTKEZÉS EGY ESEMÉNYRE
-function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
+async function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
   const checkCapacityQuery = `SELECT applied, capacity FROM locations WHERE id = ${locationId};`;
   connection.query(checkCapacityQuery, (error, results) => {
     if (error) {
@@ -89,8 +89,7 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
                     hour: "2-digit",
                     minute: "2-digit",
                   }).format(date);
-      
-      
+        
                   // Megerősítő email kiküldése
                   let mailTransporter = nodemailer.createTransport({
                     service: "gmail",
@@ -99,44 +98,41 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
                       pass: process.env.GMAIL_PW,
                     },
                   });
-      
+        
                   let details = {
                     from: '"GO EVENT! Hungary" <sipos.roland@students.jedlik.eu>',
-                    to: '"' + email + '"',
+                    to: email,
                     subject: `GO EVENT! - ${queryResults[0].name} PROGRAM VISSZAIGAZOLÁS`,
                     attachments: [{
                       filename: 'logo.png',
-                      path: './public/pictures/logo.png', 
+                      path: './public/pictures/logo.png',
                       cid: 'logo',
-                    },
-                     ],
-                     
+                    }],
                     html: `<img style="width:190px; height:33px;" src="cid:logo" /><br>Köszönjük, hogy regisztrált weboldalunkon az eseményre.
+                        
+                          <h4>Adatok a foglalással kapcsolatban:</h4><br><br>
+                          
+                          <b>Esemény neve:</b> ${queryResults[0].name}<br>
+                          <b>Helyszín:</b>  ${queryResults[0].city}, ${queryResults[0].street}${queryResults[0].house_number ? ` ${queryResults[0].house_number}.` : ''}<br>
+                          <b>Időpont:</b> ${formattedDate}<br><br>
+        
+                          <b>Belépéshez szükséges kód:</b> ${Pass_Code}<br> 
+                          <i>(Kérjük ne ossza meg ezt az adatot más személlyel!)</i><br><br>
                     
-      
-                <h4>Adatok a foglalással kapcsolatban:</h4><br><br>
-                
-                <b>Esemény neve:</b> ${queryResults[0].name}<br>
-                <b>Helyszín:</b>  ${queryResults[0].city}, ${queryResults[0].street}${queryResults[0].house_number ? ` ${queryResults[0].house_number}.` : ''}<br>
-                <b>Időpont:</b> ${formattedDate}<br><br>
-
-                <b>Belépéshez szükséges kód:</b> ${Pass_Code}<br> 
-                <i>(Kérjük ne ossza meg ezt az adatot más személlyel!)</i><br><br>
-      
-                Jó szórakozást kívánunk!<br><br>
-      
-      
-                Üdvözlettel: GO EVENT! Csapata
-                `,
+                          Jó szórakozást kívánunk!<br><br>
+                    
+                    
+                          Üdvözlettel: GO EVENT! Csapata
+                          `,
                   };
-      
-                  mailTransporter.sendMail(details, (err) => {
+        
+                  mailTransporter.sendMail(details, (err, info) => {
                     if (err) {
-                      // console.log("Hiba történt az email küldése közben!", err);
+                      console.error("Hiba történt az email küldése közben!", err);
                     } else {
-                      // console.log("Email elküldve!");
-      
+                      console.log("Email elküldve!");
                     }
+                    mailTransporter.close(); // Bezárjuk a transporter kapcsolatát
                   });
                 }
               });
@@ -156,47 +152,64 @@ function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
 
 
 // ESEMÉNY VISSZAMONDÁSA
-function cancelApplication(locationId, userId, eventId, email) {
-  const checkQuery = `SELECT * FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
-  connection.query(checkQuery, (checkError, checkResults) => {
-    if (checkError) {
-      console.error(checkError);
-    } else if (checkResults.length === 0) {
+async function cancelApplication(locationId, userId, eventId, email) {
+  try {
+    const checkQuery = `SELECT * FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
+    const checkResults = await new Promise((resolve, reject) => {
+      connection.query(checkQuery, (error, results) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+    if (checkResults.length === 0) {
       // console.error("A megadott felhasználó és esemény páros nem található az adatbázisban");
     } else {
       // Kapcsolótábla rekordjának törlése
-      const query2 = `DELETE FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
-      connection.query(query2, (deleteError, deleteResults) => {
-        if (deleteError) {
-          console.error(deleteError);
-        } else {
-          const alldataquery = `SELECT * FROM eventproperties 
-                                JOIN locations ON eventproperties.loc_id = locations.id 
-                                WHERE locations.id = ${locationId};`;
-          connection.query(alldataquery, (queryError, queryResults) => {
-            if (queryError) {
-              console.error(queryError);
-            } else {
-              // Visszamondó email kiküldése
-              let mailTransporter = nodemailer.createTransport({
-                service: "gmail",
-                auth: {
-                  user: "sipos.roland@students.jedlik.eu",
-                  pass: process.env.GMAIL_PW,
-                },
-              });
-              let details = {
-                from: '"GO EVENT! Hungary" <sipos.roland@students.jedlik.eu>',
-                to: '"' + email + '"',
-                subject: `GO EVENT! - ${queryResults[0].name} PROGRAM VISSZAMONDÁS`,
-                attachments: [
-                  {
-                    filename: "logo.png",
-                    path: "./public/pictures/logo.png",
-                    cid: "logo",
-                  },
-                ],
-                html: `<img style="width:190px; height:33px;" src="cid:logo" /><br>Ön visszamondta a(z) <b>${queryResults[0].name}</b> eseményt,<br>
+      const deleteQuery = `DELETE FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
+      await new Promise((resolve, reject) => {
+        connection.query(deleteQuery , (error, results) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(results);
+          }
+        });
+      });
+      const alldataquery = `SELECT * FROM eventproperties 
+                            JOIN locations ON eventproperties.loc_id = locations.id 
+                            WHERE locations.id = ${locationId};`;
+      const queryResults = await new Promise((resolve, reject) => {
+        connection.query(alldataquery, (error, results) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(results);
+          }
+        });
+      });
+      // Visszamondó email kiküldése
+      const mailTransporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "sipos.roland@students.jedlik.eu",
+          pass: process.env.GMAIL_PW,
+        },
+      });
+      const details = {
+        from: '"GO EVENT! Hungary" <sipos.roland@students.jedlik.eu>',
+        to: '"' + email + '"',
+        subject: `GO EVENT! - ${queryResults[0].name} PROGRAM VISSZAMONDÁS`,
+        attachments: [
+          {
+            filename: "logo.png",
+            path: "./public/pictures/logo.png",
+            cid: "logo",
+          },
+        ],
+        html: `<img style="width:190px; height:33px;" src="cid:logo" /><br>Ön visszamondta a(z) <b>${queryResults[0].name}</b> eseményt,<br>
                 így töröltük részvételi igényét a rendszerünkből.<br><br>
 
 
@@ -205,30 +218,38 @@ function cancelApplication(locationId, userId, eventId, email) {
 
                 Üdvözlettel: GO EVENT! Csapata
                 `,
-              };
-              mailTransporter.sendMail(details, (err) => {
-                if (err) {
-                  console.log("Hiba történt az email küldése közben!", err);
-                } else {
-                  console.log("Email elküldve!");
-                }
-              });
-            }
-          });
-        }
+      };
+      await new Promise((resolve, reject) => {
+        mailTransporter.sendMail(details, (error) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve();
+          }
+        });
       });
+      mailTransporter.close(); // Bezárjuk a transporter kapcsolatát
+
       // Aktuális létszám csökkentése
       const query = `UPDATE locations SET applied = applied - 1 WHERE id = ${locationId}`;
-      connection.query(query, (error, results) => {
-        if (error) {
-          console.error(error);
-        } else {
-          // console.log(`Sikeresen törölte jelentkezési szándékát!`);
-        }
+      await new Promise((resolve, reject) => {
+        connection.query(query, (error, results) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(results);
+          }
+        });
       });
     }
-  });
+  } catch (error) {
+    console.error(error);
+  }
 }
+
+
+
+
 
 // HÍRLEVÉL TARTALMÁNAK TOVÁBBÍTÁSA
 function contactForm(senderName, senderEmail, subject, message) {

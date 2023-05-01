@@ -4,13 +4,8 @@ if (process.env.NODE_ENV !== "production") {
 // Importálások
 const express = require("express");
 const app = express();
-const passport = require("passport");
-const flash = require("express-flash");
-const session = require("express-session");
-const methodOverride = require("method-override");
 const port = 5172;
 const routes = require("./routes");
-const cookieParser = require('cookie-parser');
 const cors = require("cors")
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger.json');
@@ -20,26 +15,15 @@ const swaggerDocument = require('./swagger.json');
 app
   .use(express.json())
   .use(express.urlencoded({ extended: false }))
-  .use(cors({ 
-    origin: '*'
-}))
-
-  .use(flash())
-  .use(
-    session({
-      secret: process.env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-    })
-  )
-  .use(passport.initialize())
-  .use(passport.session())
-  .use(methodOverride("_method"))
-  .use(cookieParser())
+  .use(cors({ origin: '*' }))
   .use("/docs", routes)
   .use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-
-
+  .use('/', (req, res, next) => {
+    res.setHeader('accept', 'text/plain'); // 'accept' fejléc beállítása
+    res.setHeader('Content-Type', 'application/json'); // 'Content-Type' fejléc beállítása
+    swaggerUi.setup(swaggerDocument)(req, res, next); // Swagger UI beállítása
+  });
+  
 
 
 // HELYI HÁLÓZAT
