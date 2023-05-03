@@ -1,7 +1,9 @@
 const bcrypt = require('bcrypt');
 const connection = require('../Config/database')
 
-// ÚJ ESEMÉNY LÉTREHOZÁSA
+// ****************************************************** \\
+// **   Ú J   E S E M É N Y   L É T R E H O Z Á S A   **  \\
+// ****************************************************** \\
 function AddNewEvent(connection) {
   return async (req, res) => {
     try {
@@ -139,8 +141,9 @@ function insertEventsPerformers(connection, req) {
 
 
 
-
-// ÚJ ADMINISZTRÁTOR RÖGZÍTÉSE
+// ****************************************************** \\
+// **           A D M I N    R Ö G Z Í T É S          **  \\
+// ****************************************************** \\
 function AddNewAdmin(connection) {
   return async (req, res) => {
     if (req.body.password == req.body.password_match) {
@@ -183,8 +186,9 @@ function AddNewAdmin(connection) {
 
 
 
-
-// ESEMÉNY TÖRLÉSE
+// ****************************************************** \\
+// **           E S E M É N Y   T Ö R L É S E         **  \\
+// ****************************************************** \\
 function deleteEvent(id) {
   return new Promise((resolve, reject) => {
     connection.query(`SELECT * FROM users_events WHERE events_id=${id};`, async (err, result) => {

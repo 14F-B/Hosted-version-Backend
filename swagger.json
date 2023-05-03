@@ -1282,29 +1282,43 @@
           ],
           "properties": {
             "name": {
-              "type": "string"
+              "type": "string",
+              "example": "Horváth Péter"
+
             },
             "email": {
               "type": "string",
-              "format": "email"
+              "format": "email",
+              "example": "horvathPeter91@gmail.com"
+
             },
             "password": {
               "type": "string",
-              "description": "Jelszó"
+              "description": "Jelszó",
+              "example": "horvathPeter91"
+
             },
             "password_match": {
               "type": "string",
-              "description": "Jelszó mégegyszer"
+              "description": "Jelszó mégegyszer",
+              "example": "horvathPeter91"
+
             },
             "citizenship": {
-              "type": "string"
+              "type": "string",
+              "example": "Magyar"
+
             },
             "gender": {
-              "type": "string"
+              "type": "string",
+              "example": "Férfi"
+
             },
             "birthday": {
               "type": "string",
-              "format": "date"
+              "format": "date",
+              "example": "1991-05-03"
+
             }
           }
         },

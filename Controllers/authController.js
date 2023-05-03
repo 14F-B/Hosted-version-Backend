@@ -2,7 +2,9 @@ const bcrypt = require("bcrypt");
 const connection = require('../Config/database');
 const nodemailer = require("nodemailer");
 
-// LOGIN BEJELENTKEZÉS
+// ****************************************************** \\
+// **        B E J E L E N T K E Z É S   (LOGIN)      **  \\
+// ****************************************************** \\
 function login(connection) {
   return async (req, res) => {
   const email = req.body.email;
@@ -38,8 +40,9 @@ function login(connection) {
 
 
 
-
-// ÁLTALÁNOS REGISZTRÁCIÓ
+// ****************************************************** \\
+// **  Á L T A L Á N O S   R E G I S Z T R Á C I Ó    **  \\
+// ****************************************************** \\
 function signUp(connection) {
   return async (req, res) => {
     if (req.body.password == req.body.password_match) {
@@ -78,8 +81,9 @@ function signUp(connection) {
 }
 
 
-
-// ELFELEJTETT JELSZÓ - JELSZÓGENERÁLÁS
+// ****************************************************** \\
+// **       E L F E L E J T E T T    J E L S Z Ó      **  \\
+// ****************************************************** \\
 async function forgotPassword(email) {
   try {
     const user = await getUserByEmail(email);
@@ -98,16 +102,12 @@ async function forgotPassword(email) {
         pass: process.env.GMAIL_PW
       },
     });
-    
+    const htmlContent = await getHtmlForgotPassword(newPassword);
     const mailOptions = {
       from: '"GO EVENT! Hungary" <sipos.roland@students.jedlik.eu>',
       to: email,
       subject: "GO EVENT! - Új jelszó",
-      html: `Ön új jelszót igényelt a GO EVENT! felületén.<br><br>
-        <b>Az új jelszó amivel be tud lépni:</b> ${newPassword}<br>
-        <i>(Belépést követően a profilban meg tudja változtatni.)</i><br><br>
-        Amennyiben nem Ön kérelmezte a jelszó módosítást, kérjük vegye fel velünk a kapcsolatot a goeventhungary@gmail.com címen!<br><br>
-        Üdvözlettel: GO EVENT! Csapata`,
+      html: htmlContent,
     };
     
     await sendMail(mailTransporter, mailOptions);
@@ -159,9 +159,23 @@ function sendMail(transporter, options) {
   });
 }
 
+// Elfelejtett jelszó email sablonja
+async function getHtmlForgotPassword(newPassword) {
+  const path = require('path');
+  const fs = require('fs').promises; // promises alapú fs modul használata
+  const filePath = path.join(__dirname, '..', 'Template', 'ForgotpasswordTemplate.html');
+  const fileContent = await fs.readFile(filePath, 'utf-8'); // await használata a fájl olvasásánál
+  const replacedContent = `
+  ${fileContent
+        .replace('{{newPassword}}', newPassword)}
+`;
+  return replacedContent;
 
+}
 
-// JELSZÓ MEGVÁLTOZTATÁSA USERPAGE OLDALON
+// ****************************************************** \\
+// **        J E L S Z Ó V Á L T O Z T A T Á  S       **  \\
+// ****************************************************** \\
 async function changePassword(userId, oldPassword, newPassword, newPasswordMatch) {
   return new Promise((resolve, reject) => {
     // Két jelszó egyezésének vizsgálata

@@ -2,8 +2,9 @@ const connection = require("../Config/database");
 const nodemailer = require("nodemailer");
 const { v4: uuidv4 } = require("uuid");
 
-
-// FELHASZNÁLÓ TÖRLÉSE
+// ****************************************************** \\
+// **       F E L H A S Z N Á L Ó   T Ö R L É S E     **  \\
+// ****************************************************** \\
 async function deleteUserById(id) {
   return new Promise((resolve, reject) => {
     connection.getConnection(async (err, connection) => {
@@ -38,8 +39,9 @@ async function deleteUserById(id) {
 
 
 
-
-// JELENTKEZÉS EGY ESEMÉNYRE
+// ****************************************************** \\
+// ** J E L E N T K E Z É S  E G Y   E S E M É N Y R E **  \\
+// ******************************************************* \\
 async function applyToLocation(locationId,userId,eventId,eventDate,eventAge,userBirthday,email) {
   try {
     const results = await checkCapacity(locationId);
@@ -59,10 +61,16 @@ async function applyToLocation(locationId,userId,eventId,eventDate,eventAge,user
     } else if (applied >= capacity) {
       return { statusCode: 400, message: "A helyszín telítve van!" };
     } else if (userAge < eventAge) {
-      return { statusCode: 400, message: "Nem felel meg a korhatári követelménynek!" };
+      return { statusCode: 400, message: "Nem felelsz meg a korhatári követelménynek!" };
     }
   } catch (error) {
     console.error(error);
+    if (error.code === 'ER_DUP_ENTRY') {
+      return { statusCode: 400, message: " Erre az eseményre már regisztráltál !" };
+    } else {
+      return { statusCode: 500, message: " Hiba történt a feldolgozás során !" };
+
+    }
   }
 }
 
@@ -156,6 +164,7 @@ async function sendConfirmationEmail(eventData, email,passCode) {
     },
   });
 
+  const htmlContent = await getHtmlApply(eventData,passCode);
   const details = {
     from: '"GO EVENT! Hungary" <sipos.roland@students.jedlik.eu>',
     to: email,
@@ -165,32 +174,36 @@ async function sendConfirmationEmail(eventData, email,passCode) {
       path: './public/pictures/logo.png',
       cid: 'logo',
     }],
-    html: `<img style="width:190px; height:33px;" src="cid:logo" /><br>Köszönjük, hogy regisztrált weboldalunkon az eseményre.
-        
-          <h4>Adatok a foglalással kapcsolatban:</h4><br><br>
-          
-          <b>Esemény neve:</b> ${eventData.name}<br>
-          <b>Helyszín:</b>  ${eventData.city}, ${eventData.street}${eventData.house_number ? ` ${eventData.house_number}.` : ''}<br>
-          <b>Időpont:</b> ${eventData.date}<br><br>
-
-          <b>Belépéshez szükséges kód:</b> ${passCode}<br> 
-          <i>(Kérjük ne ossza meg ezt az adatot más személlyel!)</i><br><br>
-    
-          Jó szórakozást kívánunk!<br><br>
-    
-    
-          Üdvözlettel: GO EVENT! Csapata
-          `,
+    html: htmlContent,
   };
   
   return mailTransporter.sendMail(details)
    
 
 }
+// Visszaigazoló email sablonja
+async function getHtmlApply(eventData,passCode) {
+  const path = require('path');
+  const fs = require('fs').promises; // promises alapú fs modul használata
+  const filePath = path.join(__dirname, '..', 'Template', 'ApplyTemplate.html');
+  const fileContent = await fs.readFile(filePath, 'utf-8'); // await használata a fájl olvasásánál
+  const replacedContent = `
+  ${fileContent
+        .replace('{{eventName}}', eventData.name)
+        .replace('{{eventCity}}', eventData.city)
+        .replace('{{eventStreet}}', eventData.street)
+        .replace('{{eventHouseNumber}}', eventData.house_number ? ` ${eventData.house_number}.` : '')
+        .replace('{{eventDate}}', eventData.date)
+        .replace('{{passCode}}', passCode)}
+`;
+  return replacedContent;
+
+}
 
 
-
-// ESEMÉNY VISSZAMONDÁSA
+// ****************************************************** \\
+// **        E S E M É N Y    L E M O N D Á S A       **  \\
+// ****************************************************** \\
 async function cancelApplication(locationId, userId, eventId, email) {
   try {
     const checkQuery = `SELECT * FROM users_events WHERE users_id = ${userId} AND events_id=${eventId};`;
@@ -230,6 +243,7 @@ async function cancelApplication(locationId, userId, eventId, email) {
         });
       });
       // Visszamondó email kiküldése
+      const htmlContent = await getHtmlCancelapplied(queryResults[0].name);
       const mailTransporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -248,15 +262,7 @@ async function cancelApplication(locationId, userId, eventId, email) {
             cid: "logo",
           },
         ],
-        html: `<img style="width:190px; height:33px;" src="cid:logo" /><br>Ön visszamondta a(z) <b>${queryResults[0].name}</b> eseményt,<br>
-                így töröltük részvételi igényét a rendszerünkből.<br><br>
-
-
-                <i>Böngésszen további programjaink közt!</i><br><br>
-
-
-                Üdvözlettel: GO EVENT! Csapata
-                `,
+        html: htmlContent,
       };
       await new Promise((resolve, reject) => {
         mailTransporter.sendMail(details, (error) => {
@@ -267,7 +273,7 @@ async function cancelApplication(locationId, userId, eventId, email) {
           }
         });
       });
-      mailTransporter.close(); // Bezárjuk a transporter kapcsolatát
+      mailTransporter.close();
 
       // Aktuális létszám csökkentése
       const query = `UPDATE locations SET applied = applied - 1 WHERE id = ${locationId}`;
@@ -285,23 +291,38 @@ async function cancelApplication(locationId, userId, eventId, email) {
     console.error(error);
   }
 }
+// Lemondó email szövege sablonja
+async function getHtmlCancelapplied(eventname) {
+  const path = require('path');
+  const fs = require('fs').promises;
+  const filePath = path.join(__dirname, '..', 'Template', 'CancelAppliedTemplate.html');
+  const fileContent = await fs.readFile(filePath, 'utf-8'); 
+  const replacedContent = `
+  ${fileContent.replace('{{ eventname }}', eventname)}
+`;
+  return replacedContent;
+}
 
 
 
 
 
-// HÍRLEVÉL TARTALMÁNAK TOVÁBBÍTÁSA
-function contactForm(senderName, senderEmail, subject, message) {
+// ****************************************************** \\
+// **         HÍRLEVÉL TARTALMÁNAK TOVÁBBÍTÁSA        **  \\
+// ****************************************************** \\
+async function contactForm(senderName, senderEmail, subject, message) {
   const date = new Date();
-  const date_format = date.toLocaleDateString("hu-HU", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const date_format = formatDate(date);
+  const htmlContent = await getHtmlContactForm(senderName, senderEmail, subject, message, date_format);
 
-  let mailTransporter = nodemailer.createTransport({
+  const details = {
+    from: '"GO EVENT! ŰRLAP" <sipos.roland@students.jedlik.eu>',
+    to: "goeventhungary@gmail.com",
+    subject: "Űrlapkitöltés :  " + subject,
+    html: htmlContent,
+  };
+
+  const mailTransporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: "sipos.roland@students.jedlik.eu",
@@ -309,25 +330,39 @@ function contactForm(senderName, senderEmail, subject, message) {
     },
   });
 
-  let details = {
-    from: '"GO EVENT! ŰRLAP" <sipos.roland@students.jedlik.eu>',
-    to: "goeventhungary@gmail.com",
-    subject: "Űrlapkitöltés :  " + subject,
-    html: `Űrlapkitöltés érkezett az alábbi adatokkal:<br><br>
-                        <span style="font-weight:bold; padding:16px; color: #131647;">Név: </span>${senderName}<br>
-                        <span style="font-weight:bold; padding:16px; color: #131647;">Email cím:</span> ${senderEmail}<br>
-                        <span style="font-weight:bold; padding:16px; color: #131647;">Tárgy: </span> ${subject}<br>
-                        <span style="font-weight:bold; padding:16px; color: #131647;">Üzenet: </span> ${message}<br>
-                        <span style="font-weight:bold; padding:16px; color: #131647;">Kitöltés dátuma: </span>${date_format}<br>`,
-  };
+  try {
+    await mailTransporter.sendMail(details);
+    console.log("Email elküldve!");
+  } catch (err) {
+    console.log("Hiba az email kiküldése során!", err);
+  }
+}
 
-  mailTransporter.sendMail(details, (err) => {
-    if (err) {
-      console.log("Hiba az email kiküldése során!", err);
-    } else {
-      // console.log("Email elküldve!");
-    }
+// Dátum formázása
+function formatDate(date) {
+  return date.toLocaleDateString("hu-HU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
   });
+}
+
+// Kapcsolati űrlap sablonja
+async function getHtmlContactForm(senderName, senderEmail, subject, message, date_format) {
+  const path = require('path');
+  const fs = require('fs').promises; 
+  const filePath = path.join(__dirname, '..', 'Template', 'ContactFormTemplate.html');
+  const fileContent = await fs.readFile(filePath, 'utf-8');
+  const replacedContent = `
+  ${fileContent.replace('{{ senderName }}', senderName)
+              .replace('{{ senderEmail }}', senderEmail)
+              .replace('{{ subject }}', subject)
+              .replace('{{ message }}', message)
+              .replace('{{ date_format }}', date_format)}
+`;
+  return replacedContent;
 }
 
 module.exports = {
