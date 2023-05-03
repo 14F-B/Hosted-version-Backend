@@ -1,17 +1,25 @@
 const connection = require("../Config/database");
 
 // KÖVETKEZŐ ESEMÉNY
-function NextEventContent(callback) {
-  connection.query(
-    "SELECT name, date,city, street,house_number FROM eventproperties INNER JOIN locations ON eventproperties.loc_id = locations.id  WHERE date > NOW() ORDER BY date ASC LIMIT 1;",
-    function (error, results) {
-      if (error) {
-        return callback(error);
+function NextEventContent() {
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `SELECT name, date,city, street,house_number FROM eventproperties 
+      INNER JOIN locations ON eventproperties.loc_id = locations.id  
+      WHERE date > NOW() ORDER BY date ASC LIMIT 1;`,
+      function (error, results) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
       }
-      return callback(null, results);
-    }
-  );
+    );
+  });
 }
+
+
+
 
 // ÖSSZES ESEMÉNY KILISTÁZÁSA
 function AllEvents() {
@@ -30,8 +38,7 @@ function AllEvents() {
         if (error) {
           reject(error);
         } else {
-          const parsedResults = JSON.parse(JSON.stringify(results));
-          resolve(parsedResults);
+          resolve(results);
         }
       }
     );
@@ -42,7 +49,8 @@ function AllEvents() {
 function eventsByCategories(category) {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT eventproperties.id, eventproperties.name, eventproperties.date,DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS formatted_date, eventproperties.agelimit, eventproperties.url_link, eventproperties.description,
+      `SELECT eventproperties.id, eventproperties.name, eventproperties.date,DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') 
+      AS formatted_date, eventproperties.agelimit, eventproperties.url_link, eventproperties.description,
       eventproperties.loc_id, locations.city, locations.street, locations.house_number, 
       locations.capacity, locations.applied, performers.name as performer_name 
       FROM eventproperties JOIN locations ON eventproperties.loc_id = locations.id 
@@ -55,8 +63,7 @@ function eventsByCategories(category) {
         if (error) {
           reject(error);
         } else {
-          const parsedResults = JSON.parse(JSON.stringify(results));
-          resolve(parsedResults);
+          resolve(results);
         }
       }
     );
@@ -67,7 +74,8 @@ function eventsByCategories(category) {
 function eventsByAge(agelimit) {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT eventproperties.id, eventproperties.name, eventproperties.date,DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS formatted_date, eventproperties.agelimit, eventproperties.url_link, eventproperties.description,
+      `SELECT eventproperties.id, eventproperties.name, eventproperties.date,DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i')
+      AS formatted_date, eventproperties.agelimit, eventproperties.url_link, eventproperties.description,
       eventproperties.loc_id, locations.city, locations.street, locations.house_number, 
       locations.capacity, locations.applied, performers.name as performer_name 
       FROM eventproperties JOIN locations ON eventproperties.loc_id = locations.id 
@@ -80,8 +88,7 @@ function eventsByAge(agelimit) {
         if (error) {
           reject(error);
         } else {
-          const parsedResults = JSON.parse(JSON.stringify(results));
-          resolve(parsedResults);
+          resolve(results);
         }
       }
     );
@@ -103,8 +110,7 @@ function eventPass(pass_code) {
         if (error) {
           reject(error);
         } else {
-          const parsedResults = JSON.parse(JSON.stringify(results));
-          resolve(parsedResults);
+          resolve(results);
         }
       }
     );
@@ -115,7 +121,8 @@ function eventPass(pass_code) {
 function ArchivedEvents() {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT eventproperties.id, eventproperties.name, eventproperties.date,DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS formatted_date, eventproperties.agelimit, eventproperties.url_link, eventproperties.description,
+      `SELECT eventproperties.id, eventproperties.name, eventproperties.date,DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') 
+      AS formatted_date, eventproperties.agelimit, eventproperties.url_link, eventproperties.description,
       eventproperties.loc_id, locations.city, locations.street, locations.house_number, 
       locations.capacity, locations.applied, performers.name as performer_name 
       FROM eventproperties JOIN locations ON eventproperties.loc_id = locations.id 
@@ -125,8 +132,7 @@ function ArchivedEvents() {
         if (error) {
           reject(error);
         } else {
-          const parsedResults = JSON.parse(JSON.stringify(results));
-          resolve(parsedResults);
+          resolve(results);
         }
       }
     );
@@ -151,18 +157,19 @@ function getUsers() {
 function getAppliedEvents(id) {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT eventproperties.id, eventproperties.name, eventproperties.loc_id, locations.city, locations.street, locations.house_number, DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS formatted_date 
-                      FROM users_events 
-                      INNER JOIN eventproperties ON users_events.events_id = eventproperties.id 
-                      INNER JOIN locations ON eventproperties.loc_id = locations.id 
-                      WHERE users_events.users_id = ? AND eventproperties.date > NOW() 
-                      ORDER BY eventproperties.date`,
+      `SELECT eventproperties.id, eventproperties.name, eventproperties.loc_id, locations.city, locations.street, locations.house_number,
+       DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS formatted_date 
+       FROM users_events 
+       INNER JOIN eventproperties ON users_events.events_id = eventproperties.id 
+       INNER JOIN locations ON eventproperties.loc_id = locations.id 
+       WHERE users_events.users_id = ? AND eventproperties.date > NOW() 
+       ORDER BY eventproperties.date`,
       [parseInt(id)],
       function (error, results) {
         if (error) {
           reject(error);
         } else {
-          resolve(JSON.parse(JSON.stringify(results)));
+          resolve(results);
         }
       }
     );

@@ -1,14 +1,11 @@
 const router = require('express').Router();
-const bcrypt = require('bcrypt')
 
 
-// Config
-// Adatbázis kapcsolat
+// Adatbázis kapcsolat definiálása
 const connection = require('./Config/database');
 
 
-// Middlewares
-// API-s oldalak hozzáférése
+// API-s oldalak hozzáférése (Middleware)
 const restriction = require('./Middlewares/restriction');
 
 
@@ -34,12 +31,10 @@ const { deleteUserById, applyToLocation, cancelApplication, contactForm } = requ
 
 // Következő esemény
 router.get('/nextevent', (req, res) => {
-  NextEventContent((error, results) => {
-    if (error) { return res.status(500).json({ error: 'Adatbázis hiba!' }); }
-    res.type('json').send(JSON.stringify(results, null, 2));
-  });
+  NextEventContent()
+    .then((results) => { res.type('json').send(JSON.stringify(results, null, 2)); })
+    .catch((error) => { res.status(500).send('Hiba az adatok letöltése során! (Adatbázis hiba)' + (error)); });
 });
-
 
 // Összes jövőbeli esemény
 router.get('/allevents', (req, res) => {
@@ -135,17 +130,9 @@ router.post('/sendForm', (req, res) => {
 
 
 // Eseményre való jelentkezés
-router.post('/applyToLocation', restriction, (req, res) => {
-  // Felhasználó életkorának kiszámítása
-  const userAge = Math.round((new Date(req.body.eventDate) - new Date(req.body.userBirthday)) / (1000 * 60 * 60 * 24 * 365.25));
-
-  // Életkor vizsgálata
-  if (userAge < req.body.agelimit) {
-    return res.status(400).json({ message: "Nem vagy elég idős az eseményre való jelentkezéshez." });
-  }
-  applyToLocation(req.body.locationId, req.body.userId, req.body.eventId, userAge, req.body.agelimit, req.body.userEmail);
-  res.status(200).json({ message: "Sikeres jelentkezés!" });
-
+router.post('/applyToLocation', restriction, async (req, res) => {
+  const result = await applyToLocation(req.body.locationId, req.body.userId, req.body.eventId, req.body.eventDate, req.body.agelimit,req.body.userBirthday, req.body.userEmail);
+  res.status(result.statusCode).json({ message: result.message });
 });
 
 // Jelentkezés visszamondása

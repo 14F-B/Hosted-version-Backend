@@ -40,115 +40,154 @@ async function deleteUserById(id) {
 
 
 // JELENTKEZÉS EGY ESEMÉNYRE
-async function applyToLocation(locationId,userId,eventId,userAge,eventAge,email) {
-  const checkCapacityQuery = `SELECT applied, capacity FROM locations WHERE id = ${locationId};`;
-  connection.query(checkCapacityQuery, (error, results) => {
-    if (error) {
-      console.error(error);
-    } else {
-      const applied = results[0].applied;
-      const capacity = results[0].capacity;
+async function applyToLocation(locationId,userId,eventId,eventDate,eventAge,userBirthday,email) {
+  try {
+    const results = await checkCapacity(locationId);
+    const applied = results[0].applied;
+    const capacity = results[0].capacity;
+    const userAge = await Math.round((new Date(eventDate) - new Date(userBirthday)) / (1000 * 60 * 60 * 24 * 365.25));
 
-      if (applied < capacity && userAge >= eventAge) {
-        // a helyszín kapacitása még nem telítődött meg, és a felhasználó megfelelő korú
-        const query = `UPDATE locations SET applied = applied + 1 WHERE id = ${locationId}`;
-        connection.query(query, (error) => {
-          if (error) {
-            console.error(error);
-          } else {
-            // console.log(`Sikeresen jelentkezett a(z) ${locationId} helyszínre!`);
-          }
-        });
-        // Egyedi belépőkód az eseményre
-        const Pass_Code = uuidv4({
-          node: [0x01, 0x23, 0x45, 0x67, 0x89, 0xab],
-          clockseq: 0x1234,
-          msecs: new Date("2022-01-01").getTime(),
-          nsecs: 5678,
-        });
-      
-        // Kapcsolótábla feltöltése a megfelelő adatokkal
-        connection.query(
-          `INSERT INTO users_events (events_id, users_id, event_pass_code) VALUES (${eventId},${userId},${'"' + Pass_Code + '"'})`,
-          (error, results) => {
-            if (error) {
-              console.error(error);
-            } else {
-              const alldataquery = `SELECT * FROM eventproperties 
-                                    JOIN locations ON eventproperties.loc_id = locations.id 
-                                    WHERE locations.id = ${locationId};`;
-              connection.query(alldataquery, (queryError, queryResults) => {
-                if (queryError) {
-                  console.error(queryError);
-                } else {
-                  const date = new Date(queryResults[0].date);
-                  const formattedDate = new Intl.DateTimeFormat("hu-HU", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }).format(date);
-        
-                  // Megerősítő email kiküldése
-                  let mailTransporter = nodemailer.createTransport({
-                    service: "gmail",
-                    auth: {
-                      user: "sipos.roland@students.jedlik.eu",
-                      pass: process.env.GMAIL_PW,
-                    },
-                  });
-        
-                  let details = {
-                    from: '"GO EVENT! Hungary" <sipos.roland@students.jedlik.eu>',
-                    to: email,
-                    subject: `GO EVENT! - ${queryResults[0].name} PROGRAM VISSZAIGAZOLÁS`,
-                    attachments: [{
-                      filename: 'logo.png',
-                      path: './public/pictures/logo.png',
-                      cid: 'logo',
-                    }],
-                    html: `<img style="width:190px; height:33px;" src="cid:logo" /><br>Köszönjük, hogy regisztrált weboldalunkon az eseményre.
-                        
-                          <h4>Adatok a foglalással kapcsolatban:</h4><br><br>
-                          
-                          <b>Esemény neve:</b> ${queryResults[0].name}<br>
-                          <b>Helyszín:</b>  ${queryResults[0].city}, ${queryResults[0].street}${queryResults[0].house_number ? ` ${queryResults[0].house_number}.` : ''}<br>
-                          <b>Időpont:</b> ${formattedDate}<br><br>
-        
-                          <b>Belépéshez szükséges kód:</b> ${Pass_Code}<br> 
-                          <i>(Kérjük ne ossza meg ezt az adatot más személlyel!)</i><br><br>
-                    
-                          Jó szórakozást kívánunk!<br><br>
-                    
-                    
-                          Üdvözlettel: GO EVENT! Csapata
-                          `,
-                  };
-        
-                  mailTransporter.sendMail(details, (err, info) => {
-                    if (err) {
-                      console.error("Hiba történt az email küldése közben!", err);
-                    } else {
-                      console.log("Email elküldve!");
-                    }
-                    mailTransporter.close(); // Bezárjuk a transporter kapcsolatát
-                  });
-                }
-              });
-            }
-          }      
-        )} 
-        else if (applied >= capacity) {
-        // console.log(`A helyszín telítve van!`);
-        return;
-      } else if (userAge < eventAge) {
-        // console.log(`A felhasználó nem megfelelő korú az eseményhez!`);
-        return;
-      }
+ 
+    if (applied < capacity && userAge >= eventAge) {
+      await updateAppliedCount(locationId);
+      const passCode = await generatePassCode();
+      await addUserToEvent(eventId, userId, passCode);
+      const eventData = await getEventData(locationId);
+      const emailSent = await sendConfirmationEmail(eventData, email,passCode);
+      console.log(emailSent ? "Email elküldve!" : "Hiba történt az email küldése közben!");
+      return { statusCode: 200, message: "Sikeres jelentkezés!" };
+    } else if (applied >= capacity) {
+      return { statusCode: 400, message: "A helyszín telítve van!" };
+    } else if (userAge < eventAge) {
+      return { statusCode: 400, message: "Nem felel meg a korhatári követelménynek!" };
     }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Kapacitás ellenőrzése
+function checkCapacity(locationId) {
+  const checkCapacityQuery = `SELECT applied, capacity FROM locations WHERE id = ${locationId};`;
+  return new Promise((resolve, reject) => {
+    connection.query(checkCapacityQuery, (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+        console.log(results)
+
+      }
+    });
   });
 }
+
+// Jelentkezettek számának frissítése
+function updateAppliedCount(locationId) {
+  const query = `UPDATE locations SET applied = applied + 1 WHERE id = ${locationId}`;
+  return new Promise((resolve, reject) => {
+    connection.query(query, (error) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+// Belépőkód generálása
+function generatePassCode() {
+  return uuidv4({
+    node: [0x01, 0x23, 0x45, 0x67, 0x89, 0xab],
+    clockseq: 0x1234,
+    msecs: new Date("2022-01-01").getTime(),
+    nsecs: 5678,
+  });
+}
+
+// Kapcsolótábla feltöltése
+function addUserToEvent(eventId, userId, passCode) {
+  const query = `INSERT INTO users_events (events_id, users_id, event_pass_code) VALUES (${eventId},${userId},${'"' + passCode + '"'})`;
+  return new Promise((resolve, reject) => {
+    connection.query(query, (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+        console.log(results)
+      }
+    });
+  });
+}
+
+// Esemény adatainak lekérdezése
+function getEventData(locationId) {
+  const query = `SELECT * FROM eventproperties 
+                 JOIN locations ON eventproperties.loc_id = locations.id 
+                 WHERE locations.id = ${locationId};`;
+  return new Promise((resolve, reject) => {
+    connection.query(query, (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        const eventData = results[0];
+        const date = new Date(eventData.date);
+        const formattedDate = new Intl.DateTimeFormat("hu-HU", {     
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit", }).format(date);
+        eventData.date = formattedDate;
+        resolve(eventData);
+      }
+    });
+  });
+}
+
+// Tájékoztató email küldése
+async function sendConfirmationEmail(eventData, email,passCode) {
+  const mailTransporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "sipos.roland@students.jedlik.eu",
+      pass: process.env.GMAIL_PW,
+    },
+  });
+
+  const details = {
+    from: '"GO EVENT! Hungary" <sipos.roland@students.jedlik.eu>',
+    to: email,
+    subject: `GO EVENT! - ${eventData.name} PROGRAM VISSZAIGAZOLÁS`,
+    attachments: [{
+      filename: 'logo.png',
+      path: './public/pictures/logo.png',
+      cid: 'logo',
+    }],
+    html: `<img style="width:190px; height:33px;" src="cid:logo" /><br>Köszönjük, hogy regisztrált weboldalunkon az eseményre.
+        
+          <h4>Adatok a foglalással kapcsolatban:</h4><br><br>
+          
+          <b>Esemény neve:</b> ${eventData.name}<br>
+          <b>Helyszín:</b>  ${eventData.city}, ${eventData.street}${eventData.house_number ? ` ${eventData.house_number}.` : ''}<br>
+          <b>Időpont:</b> ${eventData.date}<br><br>
+
+          <b>Belépéshez szükséges kód:</b> ${passCode}<br> 
+          <i>(Kérjük ne ossza meg ezt az adatot más személlyel!)</i><br><br>
+    
+          Jó szórakozást kívánunk!<br><br>
+    
+    
+          Üdvözlettel: GO EVENT! Csapata
+          `,
+  };
+  
+  return mailTransporter.sendMail(details)
+   
+
+}
+
 
 
 // ESEMÉNY VISSZAMONDÁSA
