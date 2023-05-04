@@ -1,42 +1,48 @@
 const bcrypt = require("bcrypt");
 const connection = require('../Config/database');
 const nodemailer = require("nodemailer");
+const jwt = require("jsonwebtoken");
+
 
 // ****************************************************** \\
 // **        B E J E L E N T K E Z É S   (LOGIN)      **  \\
 // ****************************************************** \\
-function login(connection) {
-  return async (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
 
-  // Email alapján felhasználó adatainak lekérése
-  connection.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
-    if (err) {
-      console.log(err);
-      res.status(500).json({ message: "Hiba történt az adatbázis lekérdezése közben." });
-    } else if (result.length === 0) {
-      // Hibás email, vagy jelszó
-      res.status(401).json({ message: "Hibás email vagy jelszó.", email });
-    } else {
-      // Felhasználó adatainak elküldése a kliensnek
-      const user = result[0];
-      bcrypt.compare(password, user.password, (err, isMatch) => {
-        if (err) {
-          console.log(err);
-          res.status(500).json({ message: "Hiba történt a jelszó ellenőrzése közben." });
-        } else if (!isMatch) {
-          // Hibás email, vagy jelszó
-          res.status(401).json({ message: "Hibás email vagy jelszó.", email });
-        } else {
-          // Sikeres bejelentkezés, user adatainak elküldése a kliensnek
-          res.status(200).json({ user });
-        }
-      });
-    }
-  });
-};
+function login(connection, secret) {
+  return async (req, res) => {
+    const email = req.body.email;
+    const password = req.body.password;
+
+    // Email alapján felhasználó adatainak lekérése
+    connection.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(500).json({ message: "Hiba történt az adatbázis lekérdezése közben." });
+      } else if (result.length === 0) {
+        // Hibás email, vagy jelszó
+        res.status(401).json({ message: "Hibás email vagy jelszó.", email });
+      } else {
+        // Felhasználó adatainak elküldése a kliensnek
+        const user = result[0];
+        bcrypt.compare(password, user.password, (err, isMatch) => {
+          if (err) {
+            console.log(err);
+            res.status(500).json({ message: "Hiba történt a jelszó ellenőrzése közben." });
+          } else if (!isMatch) {
+            // Hibás email, vagy jelszó
+            res.status(401).json({ message: "Hibás email vagy jelszó.", email });
+          } else {
+            // Sikeres bejelentkezés, JWT token generálása
+            const token = jwt.sign({ email: user.email, id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+            // JWT token és user adatainak elküldése a kliensnek
+            res.status(200).json({ token, user });
+          }
+        });
+      }
+    });
+  };
 }
+
 
 
 
@@ -178,34 +184,30 @@ async function getHtmlForgotPassword(newPassword) {
 // ****************************************************** \\
 async function changePassword(userId, oldPassword, newPassword, newPasswordMatch) {
   return new Promise((resolve, reject) => {
-    // Két jelszó egyezésének vizsgálata
     if (newPassword !== newPasswordMatch) {
-      reject('Az új jelszavak nem egyeznek meg');
+      reject({ statusCode: 400, message: 'Az új jelszavak nem egyeznek meg' });
       return;
     }
 
-    // Jelenlegi jelszó ellenőrzése adatbázisból
     connection.query('SELECT password FROM users WHERE id = ?', [userId], async function (error, results) {
       if (error) {
-        reject('Adatbázis hiba');
+        reject({ statusCode: 500, message: 'Adatbázis hiba' });
         return;
       }
       const storedPassword = results[0].password;
       try {
         const match = await bcrypt.compare(oldPassword, storedPassword);
         if (!match) {
-          reject('A megadott jelenlegi jelszó helytelen');
+          reject({ statusCode: 400, message: 'A megadott jelenlegi jelszó helytelen' });
           return;
         }
 
-        // Új jelszó aktualizálása az adatbázisban
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         await connection.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
 
-        // Sikeres jelszóváltoztatás
-        resolve();
+        resolve({ statusCode: 200, message: 'A jelszó sikeresen megváltoztatva.' });
       } catch (error) {
-        reject(error.message);
+        reject({ statusCode: 500, message: 'Hiba történt a jelszóváltoztatás során' });
       }
     });
   });

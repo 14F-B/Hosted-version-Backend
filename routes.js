@@ -7,6 +7,8 @@ const connection = require('./Config/database');
 
 // API-s oldalak hozzáférése (Middleware)
 const restriction = require('./Middlewares/restriction');
+const checkAuthenticated = require('./Middlewares/checkAuthenticated');
+
 
 
 
@@ -45,7 +47,7 @@ router.get('/allevents', (req, res) => {
 
 
 // Összes felhasználó adata
-router.get('/allusers', restriction, (req, res) => {
+router.get('/allusers', restriction, checkAuthenticated,  (req, res) => {
   getUsers()
     .then((results) => { res.type('json').send(JSON.stringify(results, null, 2)); })
     .catch((error) => { res.status(500).send('Hiba az adatok letöltése során! (Adatbázis hiba)' + (error)); });
@@ -71,7 +73,7 @@ router.get('/eventagelimit/:agelimit', function (req, res) {
 
 
 // Felhasználó regisztrált eseményei id alapján
-router.get('/userapplied/:user_id', restriction, function (req, res) {
+router.get('/userapplied/:user_id', restriction,checkAuthenticated, function (req, res) {
   getAppliedEvents(req.params.user_id)
     .then(results => { res.type('json').send(JSON.stringify(results, null, 2)); })
     .catch(error => { res.status(500).send(error); });
@@ -98,13 +100,13 @@ router.get('/archive', (req, res) => {
 ****************************************************************************/
 
 // Autentikáció
-router.post("/signup",  signUp(connection) );
-router.post("/newadmin", restriction, AddNewAdmin(connection));
+router.post("/signup",checkAuthenticated,  signUp(connection) );
+router.post("/newadmin", restriction,checkAuthenticated, AddNewAdmin(connection));
 router.post('/login', restriction ,login(connection));
 
 
 // Új esemény létrehozása 
-router.post("/newevent", restriction, async (req, res, next) => {
+router.post("/newevent", restriction,checkAuthenticated, async (req, res, next) => {
   try {
     await AddNewEvent(connection)(req, res);
     res.status(200).send("Az esemény sikeresen hozzáadva!");
@@ -130,13 +132,13 @@ router.post('/sendForm', (req, res) => {
 
 
 // Eseményre való jelentkezés
-router.post('/applyToLocation', restriction, async (req, res) => {
+router.post('/applyToLocation', restriction,checkAuthenticated, async (req, res) => {
   const result = await applyToLocation(req.body.locationId, req.body.userId, req.body.eventId, req.body.eventDate, req.body.agelimit,req.body.userBirthday, req.body.userEmail);
   res.status(result.statusCode).json({ message: result.message });
 });
 
 // Jelentkezés visszamondása
-router.post('/cancelApplication', restriction, async (req, res) => {
+router.post('/cancelApplication', restriction,checkAuthenticated, async (req, res) => {
   try {
     await cancelApplication(req.body.locationId, req.body.userID, req.body.eventId, req.body.userEmail);
     res.status(200).send("Sikeresen visszavontad a jelentkezést!"); // Visszaküld 200-as státuszkóddal és sikeres üzenettel
@@ -166,23 +168,13 @@ router.put('/forgotpassword', restriction, async (req, res) => {
 
 
 // Jelszó frissítése
-router.put('/refreshPassword', restriction, async (req, res) => {
+router.put('/refreshPassword', restriction,checkAuthenticated, async (req, res) => {
   try {
-    await changePassword(req.body.id, req.body.password_old, req.body.password_new, req.body.password_new_match);
-    // Sikeres jelszóváltoztatás
-    console.log('A jelszó sikeresen megváltoztatva.');
-    // 200-as státuszkód küldése
-    res.status(200).json({ message: 'A jelszó sikeresen megváltoztatva.' });
+    const result = await changePassword(req.body.id, req.body.password_old, req.body.password_new, req.body.password_new_match);
+    res.status(result.statusCode).json({ message: result.message });
   } catch (error) {
-    // Hiba kezelése
     console.error(error);
-    if (error === 'not found') {
-      // 404-es státuszkód küldése
-      res.status(404).json({ message: 'Nem található!' });
-    } else {
-      // 500-as státuszkód küldése
-      res.status(500).json({ message: 'Hiba történt a jelszóváltoztatás során' });
-    }
+    res.status(error.statusCode).json({ message: error.message });
   }
 });
 
@@ -192,7 +184,7 @@ router.put('/refreshPassword', restriction, async (req, res) => {
 ****************************************************************************/
 
 // Esemény törlése ID alapján
-router.delete('/deleteEvent/:id', restriction, async (req, res) => {
+router.delete('/deleteEvent/:id', restriction,checkAuthenticated, async (req, res) => {
   const id = req.params.id;
   try {
     const result = await deleteEvent(id);
@@ -204,7 +196,7 @@ router.delete('/deleteEvent/:id', restriction, async (req, res) => {
 
 
 // User törlése ID alapján
-router.delete("/deleteUser/:id", restriction, async (req, res) => {
+router.delete("/deleteUser/:id", restriction,checkAuthenticated, async (req, res) => {
   const id = req.params.id;
   try {
     const result = await deleteUserById(id);

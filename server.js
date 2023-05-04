@@ -29,5 +29,4 @@ app
 // HELYI HÁLÓZAT
 app.listen(port, () => {
   console.log('\u001b[' + 32 + 'm' + 'GO EVENT! Backend server:  ' + '\u001b[0m'+`http://localhost:${port}`)
-
 });
