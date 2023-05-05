@@ -21,6 +21,11 @@
           "tags": [
             "User process"
           ],
+          "security": [
+            {
+              "JWT": []
+            }
+          ],
 
           "responses": {
             "200": {
@@ -326,7 +331,7 @@
           "description": "Az endpoint segítségével új adminisztrátort lehet regisztrálni az alkalmazásba.",
           "security": [
             {
-              "bearerAuth": []
+              "JWT": []
             }
           ],
           "requestBody": {
@@ -457,6 +462,11 @@
                 "type": "integer",
                 "format": "int64"
               }
+            }
+          ],
+          "security": [
+            {
+              "JWT": []
             }
           ],
           "responses": {
@@ -688,11 +698,6 @@
           ],
           "summary": "Bejelentkezés",
           "description": "Adatok küldése kiértékelésre",
-          "security": [
-            {
-              "bearerAuth": []
-            }
-          ],
           "requestBody": {
             "description": "Regisztráció során megadott email cím, és jelenlegi jelszó",
             "required": true,
@@ -805,6 +810,11 @@
           ],
           "summary": "Jelentkezés egy eseményre",
           "description": "Jelentkezési szándék leadása.",
+          "security": [
+            {
+              "JWT": []
+            }
+          ],
           "produces": [
             "application/json"
           ],
@@ -895,10 +905,10 @@
               "Apply / Cancel application"
             ],
             "summary": "Visszamondás",
-            "description": "Esemény részvétel lemondása.",
+            "description": "Esemény részvétel lemondása.",        
             "security": [
               {
-                "bearerAuth": []
+                "JWT": []
               }
             ],
             "requestBody": {
@@ -1010,6 +1020,11 @@
           ],
           "summary": "Jelszóváltoztatás",
           "description": "Felhasználó által ismert jelszó módosítása",
+          "security": [
+            {
+              "JWT": []
+            }
+          ],
           "requestBody": {
             "required": true,
             "content": {
@@ -1060,6 +1075,11 @@
       "Admin process"
     ],
     "summary": "Esemény törlése",
+    "security": [
+      {
+        "JWT": []
+      }
+    ],
     "parameters": [
       {
         "in": "path",
@@ -1113,6 +1133,11 @@
       "User process"
     ],
     "summary": "Felhasználó törlése",
+    "security": [
+      {
+        "JWT": []
+      }
+    ],
     "parameters": [
       {
         "in": "path",
@@ -1393,8 +1418,14 @@
             "eventCapacity"
           ]
         }
+      },
+      "securitySchemes": {
+        "JWT": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
       }
-     
     
     
 

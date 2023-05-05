@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const connection = require('../Config/database')
+const validator = require('validator')
 
 // ****************************************************** \\
 // **   Ú J   E S E M É N Y   L É T R E H O Z Á S A   **  \\
@@ -146,41 +147,72 @@ function insertEventsPerformers(connection, req) {
 // ****************************************************** \\
 function AddNewAdmin(connection) {
   return async (req, res) => {
+    if (!validator.isEmail(req.body.email)) {
+      return res.status(400).send({ error: "Bad request", message: "Hibás email cím formátum!" });
+    }
+
+    if (!isValidDate(req.body.birthday)) {
+      return res.status(400).send({ error: "Bad request", message: "Hibás születési dátum!" });
+    }
+    
+    if (req.body.password.length<8) {
+      return res.status(400).send({ error: "Bad request", message: "A jelszó hossza nem éri el a 8 karaktert" });
+    }
+
     if (req.body.password == req.body.password_match) {
       try {
         // Email ellenőrzése
         connection.query('SELECT * FROM users WHERE email = ?', [req.body.email], async (err, results) => {
           if (err) {
             console.error('Hiba a regisztráció során: ' + err.stack);
-            return res.status(500).send({message: "Adatbázis kapcsolat megszakadt" });
+            return res.status(500).send({ error: "Internal Server Error", message: "Adatbázis kapcsolat megszakadt" });
           }
           if (results.length > 0) {
             res.locals.message = "Az e-mail cím már használatban van!";
-            return res.status(409).send({ message: "Az e-mail cím már használatban van!" });
+            return res.status(409).send({ error: "Conflict", message: "Az e-mail cím már használatban van!" });
           }
           // Ha az e-mail cím még nem szerepel az adatbázisban, akkor a felhasználói adatokat hozzáadjuk
+          const gender =  (req.body.gender === 'Férfi' || req.body.gender === 'Nő') ? req.body.gender : 'Nem adom meg';
           const hashedPassword = await bcrypt.hash(req.body.password, 10);
           connection.query('INSERT INTO users (name, email, password, nationality, gender, birthdate, permission) VALUES (?, ?, ?, ?, ?, ?, "admin")', 
-          [req.body.name, req.body.email, hashedPassword, req.body.citizenship, req.body.gender, req.body.birthday], (err) => {
+          [req.body.name, req.body.email, hashedPassword, req.body.citizenship, gender, req.body.birthday], (err) => {
             if (err) {
               console.error('Hiba a regisztráció során: ' + err.stack);
-              return res.status(500).send({ message: "Adatbázis kapcsolat megszakadt" });
+              return res.status(500).send({ error: "Internal Server Error", message: "Adatbázis kapcsolat megszakadt" });
             }
             // console.log('Sikeresen regisztráció');
-            return res.status(200).send({ message: "Sikeresen hozzáadta az adminisztrátor!" });
+            return res.status(200).send({ error: "Success", message: "Sikeres regisztráció!" });
           });
         });
         
       } catch (e) {
         console.log(e);
-        return res.status(500).send({message: "Adatbázis kapcsolat megszakadt" });
+        return res.status(500).send({ error: "Internal Server Error", message: "Adatbázis kapcsolat megszakadt" });
       }
     } else {
-      return res.status(400).send({message: "A két jelszó nem egyezik!" });
+      return res.status(400).send({ error: "Bad request", message: "A két jelszó nem egyezik!" });
     }
   };
 }
 
+
+// Dátum ellenőrzése
+function isValidDate(dateString) {
+  // Valós-e a dátum
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return false;
+  }
+
+  // 16 évnél idősebb-e a regisztrált
+  const minDate = new Date();
+  minDate.setFullYear(minDate.getFullYear() - 16);
+  if (date > minDate) {
+    return false;
+  }
+
+  return true;
+}
 
 
 

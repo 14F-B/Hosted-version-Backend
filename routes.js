@@ -81,10 +81,18 @@ router.get('/userapplied/:user_id', restriction,checkAuthenticated, function (re
 
 
 // Esemény személy ellenőrzése
-router.get('/eventpass/:pass_code', restriction, function (req, res) {
-  eventPass(req.params.pass_code)
-    .then(results => { res.type('json').send(JSON.stringify(results, null, 2)); })
-    .catch(error => { res.status(500).send(error); });
+router.get('/eventpass/:pass_code', restriction, async function (req, res) {
+  try {
+    const results = await eventPass(req.params.pass_code);
+    if (results.length > 0) {
+      res.type('json').send(JSON.stringify(results, null, 2));
+    } else {
+      res.status(404).send({ message: 'Érvénytelen belépési azonosító!' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: 'Szerver hiba!' });
+  }
 });
 
 
@@ -100,7 +108,7 @@ router.get('/archive', (req, res) => {
 ****************************************************************************/
 
 // Autentikáció
-router.post("/signup",checkAuthenticated,  signUp(connection) );
+router.post("/signup",  signUp(connection) );
 router.post("/newadmin", restriction,checkAuthenticated, AddNewAdmin(connection));
 router.post('/login', restriction ,login(connection));
 

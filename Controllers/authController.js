@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const connection = require('../Config/database');
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+const validator = require('validator');
 
 
 // ****************************************************** \\
@@ -33,7 +34,7 @@ function login(connection, secret) {
             res.status(401).json({ message: "Hibás email vagy jelszó.", email });
           } else {
             // Sikeres bejelentkezés, JWT token generálása
-            const token = jwt.sign({ email: user.email, id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+            const token = jwt.sign({ email: user.email, id: user.id }, process.env.JWT_SECRET, { expiresIn: "1w" });
             // JWT token és user adatainak elküldése a kliensnek
             res.status(200).json({ token, user });
           }
@@ -49,8 +50,21 @@ function login(connection, secret) {
 // ****************************************************** \\
 // **  Á L T A L Á N O S   R E G I S Z T R Á C I Ó    **  \\
 // ****************************************************** \\
+
 function signUp(connection) {
   return async (req, res) => {
+    if (!validator.isEmail(req.body.email)) {
+      return res.status(400).send({ error: "Bad request", message: "Hibás email cím formátum!" });
+    }
+
+    if (!isValidDate(req.body.birthday)) {
+      return res.status(400).send({ error: "Bad request", message: "Hibás születési dátum!" });
+    }
+
+    if (req.body.password.length<8) {
+      return res.status(400).send({ error: "Bad request", message: "A jelszó hossza nem éri el a 8 karaktert" });
+    }
+
     if (req.body.password == req.body.password_match) {
       try {
         // Email ellenőrzése
@@ -64,9 +78,10 @@ function signUp(connection) {
             return res.status(409).send({ error: "Conflict", message: "Az e-mail cím már használatban van!" });
           }
           // Ha az e-mail cím még nem szerepel az adatbázisban, akkor a felhasználói adatokat hozzáadjuk
+          const gender =  (req.body.gender === 'Férfi' || req.body.gender === 'Nő') ? req.body.gender : 'Nem adom meg';
           const hashedPassword = await bcrypt.hash(req.body.password, 10);
           connection.query('INSERT INTO users (name, email, password, nationality, gender, birthdate, permission) VALUES (?, ?, ?, ?, ?, ?, "user")', 
-          [req.body.name, req.body.email, hashedPassword, req.body.citizenship, req.body.gender, req.body.birthday], (err) => {
+          [req.body.name, req.body.email, hashedPassword, req.body.citizenship, gender, req.body.birthday], (err) => {
             if (err) {
               console.error('Hiba a regisztráció során: ' + err.stack);
               return res.status(500).send({ error: "Internal Server Error", message: "Adatbázis kapcsolat megszakadt" });
@@ -87,11 +102,34 @@ function signUp(connection) {
 }
 
 
+// Dátum ellenőrzése
+function isValidDate(dateString) {
+  // Valós-e a dátum
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return false;
+  }
+
+  // 6 évnél idősebb-e a regisztrált
+  const minDate = new Date();
+  minDate.setFullYear(minDate.getFullYear() - 6);
+  if (date > minDate) {
+    return false;
+  }
+
+  return true;
+}
+
+
 // ****************************************************** \\
 // **       E L F E L E J T E T T    J E L S Z Ó      **  \\
 // ****************************************************** \\
 async function forgotPassword(email) {
   try {
+    if (!validator.isEmail(req.body.email)) {
+      throw { statusCode: 400, message: "Hibás email cím formátum!" };
+    }
+
     const user = await getUserByEmail(email);
     if (!user) {
       throw { statusCode: 400, message: "Az adott e-mail cím nem található az adatbázisban." };

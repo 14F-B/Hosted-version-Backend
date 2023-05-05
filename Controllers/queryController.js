@@ -96,7 +96,7 @@ function eventsByAge(agelimit) {
 }
 
 // ESEMÉNY: BELÉPŐKÓD ELLENŐRZÉSE
-function eventPass(pass_code) {
+async function eventPass(pass_code) {
   return new Promise((resolve, reject) => {
     connection.query(
       `SELECT eventproperties.name AS event_name, DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS event_date, users.name AS user_name,
@@ -157,13 +157,10 @@ function getUsers() {
 function getAppliedEvents(id) {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT eventproperties.id, eventproperties.name, eventproperties.loc_id, locations.city, locations.street, locations.house_number,
-       DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS formatted_date 
-       FROM users_events 
-       INNER JOIN eventproperties ON users_events.events_id = eventproperties.id 
-       INNER JOIN locations ON eventproperties.loc_id = locations.id 
-       WHERE users_events.users_id = ? AND eventproperties.date > NOW() 
-       ORDER BY eventproperties.date`,
+      `SELECT eventproperties.id, eventproperties.name, eventproperties.loc_id, locations.city, locations.street, locations.house_number, 
+      users_events.event_pass_code, DATE_FORMAT(eventproperties.date, '%Y.%m.%d %H:%i') AS formatted_date FROM users_events 
+      INNER JOIN eventproperties ON users_events.events_id = eventproperties.id INNER JOIN locations ON eventproperties.loc_id = 
+      locations.id WHERE users_events.users_id = ? AND eventproperties.date > NOW() ORDER BY eventproperties.date`,
       [parseInt(id)],
       function (error, results) {
         if (error) {
