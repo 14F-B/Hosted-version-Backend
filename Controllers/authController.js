@@ -8,8 +8,7 @@ const validator = require('validator');
 // ****************************************************** \\
 // **        B E J E L E N T K E Z É S   (LOGIN)      **  \\
 // ****************************************************** \\
-
-function login(connection, secret) {
+function login(connection) {
   return async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
@@ -34,7 +33,7 @@ function login(connection, secret) {
             res.status(401).json({ message: "Hibás email vagy jelszó.", email });
           } else {
             // Sikeres bejelentkezés, JWT token generálása
-            const token = jwt.sign({ email: user.email, id: user.id }, process.env.JWT_SECRET, { expiresIn: "1w" });
+            const token = jwt.sign({ email: user.email, id: user.id, permission: user.permission }, process.env.JWT_SECRET, { expiresIn: "1w" });
             // JWT token és user adatainak elküldése a kliensnek
             res.status(200).json({ token, user });
           }
@@ -50,7 +49,6 @@ function login(connection, secret) {
 // ****************************************************** \\
 // **  Á L T A L Á N O S   R E G I S Z T R Á C I Ó    **  \\
 // ****************************************************** \\
-
 function signUp(connection) {
   return async (req, res) => {
     if (!validator.isEmail(req.body.email)) {

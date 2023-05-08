@@ -309,7 +309,7 @@ async function getHtmlCancelapplied(eventname) {
 
 
 // ****************************************************** \\
-// **         HÍRLEVÉL TARTALMÁNAK TOVÁBBÍTÁSA        **  \\
+// **   KAPCSOLATI ŰRLAP TARTALMÁNAK TOVÁBBÍTÁSA      **  \\
 // ****************************************************** \\
 async function contactForm(senderName, senderEmail, subject, message) {
   const date = new Date();

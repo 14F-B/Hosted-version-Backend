@@ -1,43 +1,36 @@
-const assert = require("assert");
-const sinon = require("sinon");
+const request = require('supertest');
+const app = require('./server.js');
+const { describe, it } = require('jest');
 
-describe("contactForm", function() {
-  it("should send email with correct details", async function() {
-    const senderName = "John Doe";
-    const senderEmail = "john.doe@example.com";
-    const subject = "Test Subject";
-    const message = "Test Message";
-    const expectedHtmlContent = "<html><body>Test HTML content</body></html>";
-    const expectedDetails = {
-      from: '"GO EVENT! ŰRLAP" <sipos.roland@students.jedlik.eu>',
-      to: "goeventhungary@gmail.com",
-      subject: "Űrlapkitöltés :  Test Subject",
-      html: expectedHtmlContent,
-    };
-    const expectedDate = "2023.05.03. 13:30";
 
-    const getHtmlContactFormStub = sinon.stub().resolves(expectedHtmlContent);
-    const createTransportStub = sinon.stub().returns({
-      sendMail: sinon.stub().resolves(),
-    });
+describe('POST /sendForm', () => {
+  it('should send the contact form successfully', async () => {
+    const response = await request(app)
+      .post('/sendForm')
+      .send({
+        senderName: 'John Doe',
+        senderEmail: 'johndoe@example.com',
+        subject: 'Test message',
+        message: 'This is a test message'
+      });
+    expect(response.status).toBe(200);
+    expect(response.text).toBe('Az űrlap sikeresen elküldve!');
+  });
 
-    const contactForm = proxyquire("./contactForm.js", {
-      "./getHtmlContactForm": getHtmlContactFormStub,
-      "nodemailer": {
-        createTransport: createTransportStub,
-      },
-    });
+  it('should handle server errors', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {}); 
+    const contactForm = jest.fn(() => { throw new Error('Some error'); }); 
+    const appWithError = require('../app')({ contactForm });
 
-    await contactForm(senderName, senderEmail, subject, message);
-
-    sinon.assert.calledWith(createTransportStub, {
-      service: "gmail",
-      auth: {
-        user: "sipos.roland@students.jedlik.eu",
-        pass: process.env.GMAIL_PW,
-      },
-    });
-    sinon.assert.calledWith(getHtmlContactFormStub, senderName, senderEmail, subject, message, expectedDate);
-    sinon.assert.calledWith(createTransportStub().sendMail, expectedDetails);
+    const response = await request(appWithError)
+      .post('/sendForm')
+      .send({
+        senderName: 'John Doe',
+        senderEmail: 'johndoe@example.com',
+        subject: 'Test message',
+        message: 'This is a test message'
+      });
+    expect(response.status).toBe(500);
+    expect(response.text).toBe('Szerver hiba történt.');
   });
 });
